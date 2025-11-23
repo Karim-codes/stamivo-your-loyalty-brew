@@ -339,6 +339,128 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Paper Cards vs Stamivo Comparison */}
+      <section className="relative py-20 md:py-32 bg-gradient-to-b from-background via-primary/5 to-background overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute top-20 left-0 w-64 h-64 bg-soft-orange/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl" />
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <div className="inline-block mb-4">
+                <span className="px-6 py-2 bg-destructive/10 text-destructive rounded-full text-sm font-semibold tracking-wide">
+                  THE OLD WAY vs THE NEW WAY
+                </span>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
+                Paper cards vs <span className="text-primary">Stamivo</span>
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                See why coffee shops are ditching paper for digital
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Paper Cards Column */}
+              <ScrollReveal delay={0.1}>
+                <div className="relative bg-gradient-to-br from-muted/50 to-muted/30 rounded-3xl p-8 md:p-10 border-2 border-muted backdrop-blur">
+                  {/* Torn paper effect on top */}
+                  <div className="absolute -top-3 left-0 right-0 h-6 bg-muted/50" style={{
+                    clipPath: "polygon(0 0, 5% 100%, 10% 0, 15% 100%, 20% 0, 25% 100%, 30% 0, 35% 100%, 40% 0, 45% 100%, 50% 0, 55% 100%, 60% 0, 65% 100%, 70% 0, 75% 100%, 80% 0, 85% 100%, 90% 0, 95% 100%, 100% 0)"
+                  }} />
+                  
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-muted rounded-2xl mb-4 opacity-50">
+                      <Coffee className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-muted-foreground mb-2">Paper Cards</h3>
+                    <p className="text-sm text-muted-foreground/70">The traditional approach</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {[
+                      "Cards get lost or damaged",
+                      "Takes up counter space",
+                      "No customer data or insights",
+                      "Easy to forge or cheat",
+                      "Customers forget to bring them",
+                      "Expensive to print and replace",
+                      "No way to track effectiveness"
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-3 group">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-destructive/20 flex items-center justify-center mt-0.5">
+                          <span className="text-destructive text-lg font-bold leading-none">×</span>
+                        </div>
+                        <p className="text-muted-foreground line-through">{item}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </ScrollReveal>
+
+              {/* Stamivo Column */}
+              <ScrollReveal delay={0.2}>
+                <div className="relative bg-gradient-to-br from-primary/10 via-soft-orange/10 to-accent/10 rounded-3xl p-8 md:p-10 border-2 border-primary/30 shadow-2xl backdrop-blur">
+                  {/* Shine effect */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-white/20 to-transparent rounded-bl-full" />
+                  
+                  <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary to-soft-orange rounded-2xl mb-4 shadow-lg">
+                      <Smartphone className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-foreground mb-2">Stamivo</h3>
+                    <p className="text-sm text-primary font-semibold">The modern solution</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {[
+                      "Always accessible on phone or web",
+                      "Zero physical clutter",
+                      "Rich customer insights & analytics",
+                      "Secure digital verification",
+                      "Always in their pocket",
+                      "One-time setup, infinite use",
+                      "Track ROI and engagement"
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-3 group">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center mt-0.5 group-hover:scale-110 transition-transform">
+                          <svg className="w-4 h-4 text-primary" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                            <path d="M5 13l4 4L19 7"></path>
+                          </svg>
+                        </div>
+                        <p className="text-foreground font-medium">{item}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Call to action badge */}
+                  <div className="mt-8 pt-8 border-t border-primary/20">
+                    <div className="text-center">
+                      <p className="text-sm text-primary font-semibold mb-2">✨ Make the switch today</p>
+                      <p className="text-xs text-muted-foreground">Join hundreds of coffee shops already using Stamivo</p>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            </div>
+
+            {/* Bottom stat callout */}
+            <ScrollReveal delay={0.3}>
+              <div className="mt-12 text-center">
+                <div className="inline-block bg-gradient-to-r from-primary/10 via-soft-orange/10 to-primary/10 rounded-2xl px-8 py-4 border border-primary/20">
+                  <p className="text-lg font-semibold text-foreground">
+                    <span className="text-primary text-2xl">90%</span> of customers prefer digital loyalty over paper cards
+                  </p>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
       {/* Product Showcase with Device Mockups */}
       <section className="py-20 md:py-32 bg-gradient-to-b from-background to-cream-beige/30">
         <div className="container mx-auto px-4">

@@ -635,6 +635,182 @@ export default function Landing() {
       {/* Pricing Section */}
       <PricingSection />
 
+      {/* How to Get Started Timeline */}
+      <section className="py-20 md:py-32 bg-gradient-to-b from-background via-cream-beige/20 to-background relative overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/4 -left-20 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 -right-20 w-72 h-72 bg-soft-orange/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <div className="inline-block bg-primary/10 rounded-full px-6 py-2 mb-6">
+                <p className="text-sm font-bold text-primary uppercase tracking-wide">Get Started in Minutes</p>
+              </div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+                From setup to first scan in<br />
+                <span className="text-primary">3 simple steps</span>
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Launch your digital loyalty program faster than brewing a cup of coffee
+              </p>
+            </div>
+          </ScrollReveal>
+
+          {/* Timeline - Horizontal on desktop, vertical on mobile */}
+          <div className="max-w-6xl mx-auto">
+            {/* Desktop Timeline */}
+            <div className="hidden md:block relative">
+              {/* Connecting line */}
+              <div className="absolute top-16 left-[16%] right-[16%] h-1 bg-gradient-to-r from-primary/20 via-soft-orange/30 to-primary/20 rounded-full">
+                <div className="h-full bg-gradient-to-r from-primary via-soft-orange to-primary rounded-full animate-pulse" style={{ width: '0%', animation: 'expandWidth 2s ease-out forwards' }} />
+              </div>
+
+              <div className="grid grid-cols-3 gap-8 relative z-10">
+                {[
+                  {
+                    step: "01",
+                    title: "Create Your Shop",
+                    description: "Set up your coffee shop profile with logo, hours, and location in under 5 minutes",
+                    icon: Coffee,
+                    delay: 0.1,
+                    color: "from-primary to-coffee-dark"
+                  },
+                  {
+                    step: "02",
+                    title: "Customize Your Program",
+                    description: "Design your stamp card, set rewards, and choose how many stamps customers need",
+                    icon: Star,
+                    delay: 0.3,
+                    color: "from-soft-orange to-primary"
+                  },
+                  {
+                    step: "03",
+                    title: "Start Scanning",
+                    description: "Share your unique QR code and watch customer loyalty grow automatically",
+                    icon: Zap,
+                    delay: 0.5,
+                    color: "from-success to-forest-green"
+                  }
+                ].map((item) => (
+                  <ScrollReveal key={item.step} delay={item.delay}>
+                    <div className="group text-center">
+                      {/* Step circle with icon */}
+                      <div className="relative mx-auto w-32 h-32 mb-6">
+                        {/* Outer ring with gradient */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${item.color} rounded-full opacity-20 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500`} />
+                        
+                        {/* Inner circle */}
+                        <div className="absolute inset-2 bg-white rounded-full shadow-xl flex items-center justify-center group-hover:shadow-2xl transition-all duration-500">
+                          <div className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center group-hover:rotate-6 group-hover:scale-110 transition-all duration-500`}>
+                            <item.icon className="w-8 h-8 text-white" />
+                          </div>
+                        </div>
+
+                        {/* Step number badge */}
+                        <div className={`absolute -top-2 -right-2 w-10 h-10 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                          {item.step}
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <h3 className="text-2xl font-bold text-foreground mb-3 group-hover:text-primary transition-colors duration-300">
+                        {item.title}
+                      </h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {item.description}
+                      </p>
+                    </div>
+                  </ScrollReveal>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile Timeline - Vertical */}
+            <div className="md:hidden space-y-8">
+              {[
+                {
+                  step: "01",
+                  title: "Create Your Shop",
+                  description: "Set up your coffee shop profile with logo, hours, and location in under 5 minutes",
+                  icon: Coffee,
+                  delay: 0.1,
+                  color: "from-primary to-coffee-dark"
+                },
+                {
+                  step: "02",
+                  title: "Customize Your Program",
+                  description: "Design your stamp card, set rewards, and choose how many stamps customers need",
+                  icon: Star,
+                  delay: 0.2,
+                  color: "from-soft-orange to-primary"
+                },
+                {
+                  step: "03",
+                  title: "Start Scanning",
+                  description: "Share your unique QR code and watch customer loyalty grow automatically",
+                  icon: Zap,
+                  delay: 0.3,
+                  color: "from-success to-forest-green"
+                }
+              ].map((item, index, array) => (
+                <ScrollReveal key={item.step} delay={item.delay}>
+                  <div className="relative">
+                    {/* Connecting line for mobile */}
+                    {index < array.length - 1 && (
+                      <div className="absolute left-8 top-24 bottom-0 w-1 bg-gradient-to-b from-primary/30 via-soft-orange/30 to-primary/30 rounded-full translate-y-8" />
+                    )}
+
+                    <div className="flex gap-6 relative z-10">
+                      {/* Icon circle */}
+                      <div className="flex-shrink-0">
+                        <div className="relative w-16 h-16">
+                          <div className={`absolute inset-0 bg-gradient-to-br ${item.color} rounded-full opacity-20`} />
+                          <div className="absolute inset-1 bg-white rounded-full shadow-lg flex items-center justify-center">
+                            <div className={`w-10 h-10 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center`}>
+                              <item.icon className="w-5 h-5 text-white" />
+                            </div>
+                          </div>
+                          <div className={`absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-br ${item.color} rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md`}>
+                            {item.step}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 pb-8">
+                        <h3 className="text-xl font-bold text-foreground mb-2">
+                          {item.title}
+                        </h3>
+                        <p className="text-muted-foreground text-sm leading-relaxed">
+                          {item.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </ScrollReveal>
+              ))}
+            </div>
+
+            {/* Bottom CTA */}
+            <ScrollReveal delay={0.6}>
+              <div className="mt-16 text-center">
+                <div className="inline-block bg-gradient-to-r from-primary/10 via-soft-orange/10 to-primary/10 rounded-2xl px-8 py-6 border border-primary/20 hover:border-primary/40 transition-all duration-300">
+                  <p className="text-lg font-semibold text-foreground mb-2">
+                    ⏱️ Average setup time: <span className="text-primary text-xl">7 minutes</span>
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Most shops go live the same day they sign up
+                  </p>
+                </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
       {/* FAQ Section */}
       <FAQSection />
 

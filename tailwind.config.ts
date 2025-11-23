@@ -101,11 +101,16 @@ export default {
             opacity: "0",
           },
         },
+        "expandWidth": {
+          "0%": { width: "0%" },
+          "100%": { width: "100%" }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "steam": "steam 1.5s ease-in-out infinite",
+        "expandWidth": "expandWidth 2s ease-out forwards",
       },
     },
   },

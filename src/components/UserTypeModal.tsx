@@ -20,7 +20,7 @@ export function UserTypeModal({ open, onOpenChange }: UserTypeModalProps) {
         <div className="flex flex-col gap-4 py-4">
           <Button
             onClick={() => {
-              navigate("/customer");
+              navigate("/auth");
               onOpenChange(false);
             }}
             className="h-24 text-lg flex flex-col gap-2 bg-primary hover:bg-primary/90 transition-all hover:scale-105"

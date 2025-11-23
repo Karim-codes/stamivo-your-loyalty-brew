@@ -4,6 +4,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Coffee, Smartphone, Star, TrendingUp, Zap, BarChart3, ArrowRight } from "lucide-react";
 import { UserTypeModal } from "@/components/UserTypeModal";
 import CoffeeMascot3D from "@/components/CoffeeMascot3D";
+import ParticleBackground from "@/components/ParticleBackground";
+import ScrollReveal from "@/components/ScrollReveal";
+import PricingSection from "@/components/PricingSection";
+import FAQSection from "@/components/FAQSection";
 
 export default function Landing() {
   const [showModal, setShowModal] = useState(false);
@@ -16,6 +20,9 @@ export default function Landing() {
     <div className="min-h-screen overflow-hidden">
       {/* Hero Section with Premium 3D Animation */}
       <section className="relative bg-gradient-to-br from-cream-beige via-background to-soft-orange/10 pt-12 pb-20 md:pt-20 md:pb-32">
+        {/* Particle Background */}
+        <ParticleBackground />
+        
         {/* Organic Background Shapes */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-96 h-96 bg-soft-orange/10 rounded-full blur-3xl" />
@@ -67,19 +74,22 @@ export default function Landing() {
       {/* Story-Driven How It Works */}
       <section id="how-it-works" className="relative py-20 md:py-32 bg-gradient-to-b from-background to-cream-beige/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-              How it works
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Three simple steps to transform one-time visitors into loyal regulars
-            </p>
-          </div>
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+                How it works
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Three simple steps to transform one-time visitors into loyal regulars
+              </p>
+            </div>
+          </ScrollReveal>
           
           <div className="max-w-6xl mx-auto">
             {/* Step 1 */}
-            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
-              <div className="order-2 md:order-1">
+            <ScrollReveal delay={0.1}>
+              <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+                <div className="order-2 md:order-1">
                 <div className="bg-gradient-to-br from-primary/5 to-soft-orange/10 rounded-[3rem] p-8 md:p-12 relative">
                   <div className="absolute -top-6 -left-6 w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-xl">
                     1
@@ -107,9 +117,11 @@ export default function Landing() {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Step 2 */}
-            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+            <ScrollReveal delay={0.2}>
+              <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
               <div className="order-2">
                 <div className="bg-gradient-to-br from-soft-orange/5 to-accent/10 rounded-[3rem] p-8 md:p-12 relative">
                   <div className="absolute -top-6 -left-6 w-16 h-16 bg-soft-orange rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-xl">
@@ -145,9 +157,11 @@ export default function Landing() {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
 
             {/* Step 3 */}
-            <div className="grid md:grid-cols-2 gap-12 items-center">
+            <ScrollReveal delay={0.3}>
+              <div className="grid md:grid-cols-2 gap-12 items-center">
               <div className="order-2 md:order-1">
                 <div className="bg-gradient-to-br from-success/5 to-primary/10 rounded-[3rem] p-8 md:p-12 relative">
                   <div className="absolute -top-6 -left-6 w-16 h-16 bg-success rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-xl">
@@ -176,6 +190,7 @@ export default function Landing() {
                 </p>
               </div>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -189,15 +204,17 @@ export default function Landing() {
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-              Why coffee shops<br />
-              <span className="text-primary">love Stamivo</span>
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Everything you need to build customer loyalty and grow your business
-            </p>
-          </div>
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+                Why coffee shops<br />
+                <span className="text-primary">love Stamivo</span>
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Everything you need to build customer loyalty and grow your business
+              </p>
+            </div>
+          </ScrollReveal>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
             {[
@@ -238,10 +255,10 @@ export default function Landing() {
                 desc: "Simple onboarding wizard. Start rewarding customers today."
               }
             ].map((item, i) => (
-              <Card 
-                key={i} 
-                className="group hover:scale-105 transition-all duration-300 hover:shadow-2xl border-2 hover:border-primary/30 bg-white/80 backdrop-blur"
-              >
+              <ScrollReveal key={i} delay={i * 0.1}>
+                <Card 
+                  className="group hover:scale-105 transition-all duration-300 hover:shadow-2xl border-2 hover:border-primary/30 bg-white/80 backdrop-blur"
+                >
                 <CardContent className="p-8">
                   <div className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg group-hover:scale-110 transition-transform`}>
                     {item.icon}
@@ -254,6 +271,7 @@ export default function Landing() {
                   </p>
                 </CardContent>
               </Card>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -262,19 +280,22 @@ export default function Landing() {
       {/* Product Showcase with Device Mockups */}
       <section className="py-20 md:py-32 bg-gradient-to-b from-background to-cream-beige/30">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-              Your rewards,<br />
-              <span className="text-primary">always in your pocket</span>
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Beautiful, intuitive interface designed for coffee lovers
-            </p>
-          </div>
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+                Your rewards,<br />
+                <span className="text-primary">always in your pocket</span>
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Beautiful, intuitive interface designed for coffee lovers
+              </p>
+            </div>
+          </ScrollReveal>
 
           <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
             {/* Mockup 1: Stamp Card */}
-            <div className="group hover:scale-105 transition-all duration-500">
+            <ScrollReveal delay={0.1}>
+              <div className="group hover:scale-105 transition-all duration-500">
               <div className="bg-gradient-to-br from-primary/10 to-soft-orange/10 rounded-[3rem] p-6 shadow-xl group-hover:shadow-2xl">
                 <div className="bg-white rounded-[2.5rem] p-6 shadow-lg">
                   <div className="space-y-4">
@@ -303,9 +324,11 @@ export default function Landing() {
               </div>
               <p className="text-center mt-4 font-semibold text-foreground">Track Progress</p>
             </div>
+            </ScrollReveal>
 
             {/* Mockup 2: QR Scanner */}
-            <div className="group hover:scale-105 transition-all duration-500">
+            <ScrollReveal delay={0.2}>
+              <div className="group hover:scale-105 transition-all duration-500">
               <div className="bg-gradient-to-br from-soft-orange/10 to-accent/10 rounded-[3rem] p-6 shadow-xl group-hover:shadow-2xl">
                 <div className="bg-gradient-to-b from-gray-900 to-gray-800 rounded-[2.5rem] p-6 shadow-lg aspect-[9/16] flex flex-col items-center justify-center">
                   <div className="w-48 h-48 border-4 border-white rounded-2xl mb-4 relative">
@@ -319,9 +342,11 @@ export default function Landing() {
               </div>
               <p className="text-center mt-4 font-semibold text-foreground">Quick Scan</p>
             </div>
+            </ScrollReveal>
 
             {/* Mockup 3: Reward Unlocked */}
-            <div className="group hover:scale-105 transition-all duration-500">
+            <ScrollReveal delay={0.3}>
+              <div className="group hover:scale-105 transition-all duration-500">
               <div className="bg-gradient-to-br from-success/10 to-primary/10 rounded-[3rem] p-6 shadow-xl group-hover:shadow-2xl">
                 <div className="bg-white rounded-[2.5rem] p-6 shadow-lg">
                   <div className="text-center space-y-4">
@@ -342,6 +367,7 @@ export default function Landing() {
               </div>
               <p className="text-center mt-4 font-semibold text-foreground">Celebrate Rewards</p>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -354,13 +380,15 @@ export default function Landing() {
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-              Loved by coffee shops<br />
-              <span className="text-primary">& customers</span>
-            </h2>
-            <p className="text-xl text-muted-foreground">Real stories from our community</p>
-          </div>
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+                Loved by coffee shops<br />
+                <span className="text-primary">& customers</span>
+              </h2>
+              <p className="text-xl text-muted-foreground">Real stories from our community</p>
+            </div>
+          </ScrollReveal>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             {[
@@ -389,10 +417,10 @@ export default function Landing() {
                 color: "from-success to-forest-green"
               }
             ].map((testimonial, i) => (
-              <Card 
-                key={i} 
-                className="group hover:scale-105 transition-all duration-500 hover:shadow-2xl bg-white/90 backdrop-blur border-2 hover:border-primary/30"
-              >
+              <ScrollReveal key={i} delay={i * 0.1}>
+                <Card 
+                  className="group hover:scale-105 transition-all duration-500 hover:shadow-2xl bg-white/90 backdrop-blur border-2 hover:border-primary/30"
+                >
                 <CardContent className="p-8">
                   <div className="flex gap-1 mb-4">
                     {[...Array(5)].map((_, j) => (
@@ -414,10 +442,17 @@ export default function Landing() {
                   </div>
                 </CardContent>
               </Card>
+              </ScrollReveal>
             ))}
           </div>
         </div>
       </section>
+
+      {/* Pricing Section */}
+      <PricingSection />
+
+      {/* FAQ Section */}
+      <FAQSection />
 
       {/* Final CTA - Premium & Confident */}
       <section className="relative py-20 md:py-32 bg-gradient-to-br from-primary/10 via-soft-orange/10 to-primary/5">
@@ -427,20 +462,21 @@ export default function Landing() {
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-5xl mx-auto text-center">
-            <div className="mb-8">
-              <div className="text-8xl animate-bounce inline-block">☕</div>
-            </div>
-            
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-foreground leading-tight">
-              Start building loyalty<br />
-              <span className="text-primary">today.</span>
-            </h2>
-            
-            <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
-              Join thousands of coffee lovers and shop owners already using Stamivo. 
-              It's free to get started, and setup takes less than 10 minutes.
-            </p>
+          <ScrollReveal>
+            <div className="max-w-5xl mx-auto text-center">
+              <div className="mb-8">
+                <div className="text-8xl animate-bounce inline-block">☕</div>
+              </div>
+              
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-foreground leading-tight">
+                Start building loyalty<br />
+                <span className="text-primary">today.</span>
+              </h2>
+              
+              <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+                Join thousands of coffee lovers and shop owners already using Stamivo. 
+                It's free to get started, and setup takes less than 10 minutes.
+              </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button
@@ -464,7 +500,8 @@ export default function Landing() {
             <p className="text-sm text-muted-foreground mt-8">
               ✓ No credit card required  •  ✓ Free forever plan available  •  ✓ Cancel anytime
             </p>
-          </div>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 

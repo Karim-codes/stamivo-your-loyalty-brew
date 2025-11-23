@@ -6,34 +6,12 @@ import OnboardingStep3 from "./OnboardingStep3";
 import OnboardingStep4 from "./OnboardingStep4";
 import OnboardingStep5 from "./OnboardingStep5";
 import { useNavigate } from "react-router-dom";
+import { useOnboardingData } from "@/hooks/useOnboardingData";
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
-  const [formData, setFormData] = useState({
-    // Step 1
-    businessType: "",
-    businessSize: "",
-    dailyCustomers: 50,
-    hasLoyalty: "",
-    // Step 2
-    shopName: "",
-    shopAddress: "",
-    shopLogo: "",
-    openingHours: "",
-    coffeeTypes: [] as string[],
-    rewardType: "",
-    // Step 3
-    stampsRequired: 5,
-    rewardDescription: "",
-    multipleScans: false,
-    autoVerify: true,
-    publicShop: true,
-  });
-
-  const updateFormData = (data: Partial<typeof formData>) => {
-    setFormData({ ...formData, ...data });
-  };
+  const { formData, updateFormData, getFormData } = useOnboardingData();
 
   const progress = (currentStep / 5) * 100;
 
@@ -85,11 +63,7 @@ export default function Onboarding() {
           )}
           {currentStep === 5 && (
             <OnboardingStep5
-              onSignUp={() => {
-                // In a real app, this would handle signup
-                // For now, just navigate to a placeholder
-                navigate("/business/dashboard");
-              }}
+              formData={formData}
             />
           )}
         </div>

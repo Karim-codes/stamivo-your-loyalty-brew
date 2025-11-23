@@ -18,8 +18,39 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen overflow-hidden">
+      {/* Navigation Bar */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-16 md:h-20">
+            <button
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              className="flex items-center gap-2 group cursor-pointer"
+            >
+              <Coffee className="w-6 h-6 md:w-8 md:h-8 text-primary group-hover:rotate-12 transition-transform duration-300" />
+              <span className="text-xl md:text-2xl font-bold text-primary">Stamivo</span>
+            </button>
+            
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                onClick={scrollToHowItWorks}
+                className="hidden md:inline-flex hover:text-primary transition-colors"
+              >
+                How It Works
+              </Button>
+              <Button
+                onClick={() => setShowModal(true)}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                Get Started
+              </Button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section with Premium 3D Animation */}
-      <section className="relative bg-gradient-to-br from-cream-beige via-background to-soft-orange/10 pt-12 pb-20 md:pt-20 md:pb-32">
+      <section className="relative bg-gradient-to-br from-cream-beige via-background to-soft-orange/10 pt-32 pb-20 md:pt-40 md:pb-32">
         {/* Particle Background */}
         <ParticleBackground />
         

@@ -226,84 +226,115 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Why Coffee Shops Love Us */}
-      <section className="relative py-20 md:py-32 bg-gradient-to-br from-primary/5 via-background to-soft-orange/5">
-        {/* Organic blob background */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-soft-orange/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        </div>
+      {/* Why Coffee Shops Love Us - Redesigned */}
+      <section className="relative py-20 md:py-32 overflow-hidden">
+        {/* Creative background with waves */}
+        <div className="absolute inset-0 bg-gradient-to-b from-cream-beige/40 via-background to-soft-orange/10" />
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-background to-transparent" />
+        <svg className="absolute bottom-0 left-0 w-full" viewBox="0 0 1200 120" preserveAspectRatio="none">
+          <path d="M0,60 C300,100 600,20 900,60 C1050,80 1150,60 1200,50 L1200,120 L0,120 Z" fill="hsl(var(--soft-orange) / 0.1)" />
+        </svg>
         
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal>
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+            <div className="text-center mb-20">
+              <div className="inline-block mb-4">
+                <span className="px-6 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold tracking-wide">
+                  FOR COFFEE SHOPS
+                </span>
+              </div>
+              <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
                 Why coffee shops<br />
                 <span className="text-primary">love Stamivo</span>
               </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Everything you need to build customer loyalty and grow your business
               </p>
             </div>
           </ScrollReveal>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            {[
-              {
-                icon: <Smartphone className="w-8 h-8" />,
-                color: "from-primary to-coffee-dark",
-                title: "Digital loyalty cards customers actually use",
-                desc: "No app downloads required. Works instantly via web browser on any device."
-              },
-              {
-                icon: <TrendingUp className="w-8 h-8" />,
-                color: "from-soft-orange to-accent",
-                title: "Increase repeat visits effortlessly",
-                desc: "Turn first-time customers into regulars with rewards they can see and track."
-              },
-              {
-                icon: <Zap className="w-8 h-8" />,
-                color: "from-accent to-soft-orange",
-                title: "No app installation required",
-                desc: "Customers scan and go. Zero friction means more participation."
-              },
-              {
-                icon: <Coffee className="w-8 h-8" />,
-                color: "from-success to-forest-green",
-                title: "Custom rewards for your shop",
-                desc: "Set your own stamp goals and rewards. Make it uniquely yours."
-              },
-              {
-                icon: <BarChart3 className="w-8 h-8" />,
-                color: "from-primary to-soft-orange",
-                title: "Dashboard with instant insights",
-                desc: "See customer visits, popular rewards, and loyalty trends at a glance."
-              },
-              {
-                icon: <Star className="w-8 h-8" />,
-                color: "from-soft-orange to-primary",
-                title: "Setup in under 10 minutes",
-                desc: "Simple onboarding wizard. Start rewarding customers today."
-              }
-            ].map((item, i) => (
-              <ScrollReveal key={i} delay={i * 0.1}>
-                <Card 
-                  className="group hover:scale-105 transition-all duration-300 hover:shadow-2xl border-2 hover:border-primary/30 bg-white/80 backdrop-blur"
-                >
-                <CardContent className="p-8">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg group-hover:scale-110 transition-transform`}>
-                    {item.icon}
+          <div className="max-w-7xl mx-auto">
+            {/* First Row - Alternating Large Cards */}
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              <ScrollReveal delay={0.1}>
+                <div className="group relative bg-gradient-to-br from-primary/5 to-soft-orange/10 rounded-3xl p-8 md:p-10 border-2 border-primary/20 hover:border-primary/40 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-primary/10 rounded-full blur-2xl group-hover:bg-primary/20 transition-all" />
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mb-6 shadow-lg rotate-3 group-hover:rotate-6 transition-transform">
+                      <Smartphone className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
+                      Digital loyalty that actually works
+                    </h3>
+                    <p className="text-lg text-muted-foreground leading-relaxed">
+                      Seamless experience on web and mobile app. Your customers can track stamps anywhere, anytime.
+                    </p>
                   </div>
-                  <h3 className="text-xl font-bold mb-3 text-card-foreground leading-tight">
-                    {item.title}
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {item.desc}
-                  </p>
-                </CardContent>
-              </Card>
+                </div>
               </ScrollReveal>
-            ))}
+
+              <ScrollReveal delay={0.2}>
+                <div className="group relative bg-gradient-to-br from-soft-orange/10 to-accent/10 rounded-3xl p-8 md:p-10 border-2 border-soft-orange/30 hover:border-soft-orange/50 transition-all duration-500 hover:shadow-2xl hover:-translate-y-2">
+                  <div className="absolute -top-4 -left-4 w-24 h-24 bg-soft-orange/10 rounded-full blur-2xl group-hover:bg-soft-orange/20 transition-all" />
+                  <div className="relative">
+                    <div className="w-16 h-16 bg-gradient-to-br from-soft-orange to-accent rounded-2xl flex items-center justify-center mb-6 shadow-lg -rotate-3 group-hover:-rotate-6 transition-transform">
+                      <TrendingUp className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
+                      Turn visitors into regulars
+                    </h3>
+                    <p className="text-lg text-muted-foreground leading-relaxed">
+                      Reward loyalty automatically. Watch first-time customers become your biggest fans.
+                    </p>
+                  </div>
+                </div>
+              </ScrollReveal>
+            </div>
+
+            {/* Second Row - Three Compact Cards */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <ScrollReveal delay={0.3}>
+                <div className="group relative bg-white/60 backdrop-blur rounded-3xl p-6 md:p-8 border-2 border-primary/10 hover:border-primary/30 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-success to-forest-green rounded-xl mb-4 shadow-md group-hover:scale-110 transition-transform">
+                    <Coffee className="w-7 h-7 text-white" />
+                  </div>
+                  <h4 className="text-xl font-bold mb-3 text-foreground">
+                    Customize everything
+                  </h4>
+                  <p className="text-muted-foreground">
+                    Your stamps, your rewards, your brand. Make it uniquely yours.
+                  </p>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal delay={0.4}>
+                <div className="group relative bg-white/60 backdrop-blur rounded-3xl p-6 md:p-8 border-2 border-soft-orange/20 hover:border-soft-orange/40 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-primary to-soft-orange rounded-xl mb-4 shadow-md group-hover:scale-110 transition-transform">
+                    <BarChart3 className="w-7 h-7 text-white" />
+                  </div>
+                  <h4 className="text-xl font-bold mb-3 text-foreground">
+                    Insights at a glance
+                  </h4>
+                  <p className="text-muted-foreground">
+                    Track visits, rewards, and trends with a beautiful dashboard.
+                  </p>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal delay={0.5}>
+                <div className="group relative bg-white/60 backdrop-blur rounded-3xl p-6 md:p-8 border-2 border-accent/20 hover:border-accent/40 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-accent to-soft-orange rounded-xl mb-4 shadow-md group-hover:scale-110 transition-transform">
+                    <Star className="w-7 h-7 text-white" />
+                  </div>
+                  <h4 className="text-xl font-bold mb-3 text-foreground">
+                    Ready in minutes
+                  </h4>
+                  <p className="text-muted-foreground">
+                    Simple setup wizard gets you rewarding customers today.
+                  </p>
+                </div>
+              </ScrollReveal>
+            </div>
           </div>
         </div>
       </section>

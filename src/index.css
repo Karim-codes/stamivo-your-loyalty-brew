@@ -8,45 +8,47 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Coffee-themed design system */
-    --background: 35 60% 98%;
-    --foreground: 20 30% 20%;
+    /* Premium Coffee Brand Palette */
+    --background: 35 40% 97%;
+    --foreground: 20 30% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 20 30% 20%;
+    --card-foreground: 20 30% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 30% 20%;
+    --popover-foreground: 20 30% 15%;
 
-    /* Rich coffee brown */
-    --primary: 25 45% 40%;
-    --primary-foreground: 35 60% 98%;
+    /* Rich Coffee Brown - #6F4E37 */
+    --primary: 20 40% 32%;
+    --primary-foreground: 35 40% 97%;
 
-    /* Cream/latte */
-    --secondary: 35 50% 92%;
-    --secondary-foreground: 20 30% 20%;
+    /* Cream Beige - #F7EEDB */
+    --secondary: 40 60% 93%;
+    --secondary-foreground: 20 30% 15%;
 
-    --muted: 35 40% 95%;
-    --muted-foreground: 25 20% 45%;
+    --muted: 35 30% 95%;
+    --muted-foreground: 20 20% 45%;
 
-    /* Caramel accent */
-    --accent: 30 60% 55%;
-    --accent-foreground: 0 0% 100%;
+    /* Soft Orange - #E5A36F */
+    --accent: 25 70% 66%;
+    --accent-foreground: 20 30% 15%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 35 30% 88%;
-    --input: 35 30% 88%;
-    --ring: 25 45% 40%;
+    --border: 35 20% 90%;
+    --input: 35 20% 90%;
+    --ring: 20 40% 32%;
 
-    --radius: 1rem;
+    --radius: 1.5rem;
     
-    /* Custom coffee colors */
+    /* Premium Coffee Brand Colors */
     --coffee-dark: 20 40% 25%;
-    --coffee-light: 35 60% 85%;
-    --cream: 40 70% 94%;
-    --caramel: 30 60% 55%;
+    --coffee-rich: 20 40% 32%;
+    --cream-beige: 40 60% 93%;
+    --soft-orange: 25 70% 66%;
+    --forest-green: 130 30% 25%;
+    --warm-cream: 40 70% 94%;
     --success: 140 50% 45%;
 
     --sidebar-background: 0 0% 98%;

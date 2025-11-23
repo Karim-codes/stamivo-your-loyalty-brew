@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Coffee, Gift, Smartphone, Store, Zap, Clock, TrendingUp, Settings, HeadphonesIcon, Star } from "lucide-react";
+import { Coffee, Smartphone, Star, TrendingUp, Zap, BarChart3, ArrowRight } from "lucide-react";
 import { UserTypeModal } from "@/components/UserTypeModal";
-import CoffeeCup3D from "@/components/CoffeeCup3D";
+import CoffeeMascot3D from "@/components/CoffeeMascot3D";
 
 export default function Landing() {
   const [showModal, setShowModal] = useState(false);
@@ -13,99 +13,186 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-secondary/30 to-background">
-      {/* Hero Section with 3D Animation */}
-      <section className="container mx-auto px-4 py-12 md:py-20 text-center">
-        <div className="max-w-6xl mx-auto">
-          {/* 3D Coffee Cup */}
-          <div className="mb-8 animate-fade-in">
-            <CoffeeCup3D />
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 animate-fade-in leading-tight">
-            Collect stamps. Earn free coffee.<br />
-            <span className="text-primary">Join the loyalty revolution.</span>
-          </h1>
-          
-          <p className="text-lg md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto">
-            Stamivo makes loyalty simple for customers and effortless for coffee shops.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              onClick={() => setShowModal(true)}
-              size="lg"
-              className="text-xl px-12 py-8 rounded-full shadow-lg hover:scale-105 transition-all duration-300 bg-primary hover:bg-primary/90"
-            >
-              Get Started
-            </Button>
-            <Button
-              onClick={scrollToHowItWorks}
-              size="lg"
-              variant="outline"
-              className="text-xl px-12 py-8 rounded-full shadow-lg hover:scale-105 transition-all duration-300"
-            >
-              How It Works
-            </Button>
-          </div>
+    <div className="min-h-screen overflow-hidden">
+      {/* Hero Section with Premium 3D Animation */}
+      <section className="relative bg-gradient-to-br from-cream-beige via-background to-soft-orange/10 pt-12 pb-20 md:pt-20 md:pb-32">
+        {/* Organic Background Shapes */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-soft-orange/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 -left-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
         </div>
-      </section>
-
-      {/* How It Works - Redesigned */}
-      <section id="how-it-works" className="container mx-auto px-4 py-20 md:py-32">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-foreground">
-          How it works
-        </h2>
-        <p className="text-xl text-muted-foreground text-center mb-16 max-w-2xl mx-auto">
-          Three simple steps to start earning free coffee
-        </p>
         
-        <div className="grid md:grid-cols-3 gap-12 max-w-6xl mx-auto">
-          <Card className="group hover:scale-105 transition-all duration-300 hover:shadow-2xl border-2 hover:border-primary/50">
-            <CardContent className="p-8 text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-primary to-accent rounded-3xl flex items-center justify-center mb-6 mx-auto shadow-lg group-hover:animate-bounce">
-                <Smartphone className="w-12 h-12 text-primary-foreground" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4 text-card-foreground">Scan & Collect</h3>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                Scan the shop's QR code after ordering your drink. Every scan earns you a stamp.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:scale-105 transition-all duration-300 hover:shadow-2xl border-2 hover:border-accent/50 md:mt-8">
-            <CardContent className="p-8 text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-accent to-caramel rounded-3xl flex items-center justify-center mb-6 mx-auto shadow-lg group-hover:animate-bounce">
-                <Coffee className="w-12 h-12 text-accent-foreground" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4 text-card-foreground">Track Your Progress</h3>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                Watch your digital stamp card fill up with fun animations and celebrate each milestone.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:scale-105 transition-all duration-300 hover:shadow-2xl border-2 hover:border-success/50">
-            <CardContent className="p-8 text-center">
-              <div className="w-24 h-24 bg-gradient-to-br from-success to-accent rounded-3xl flex items-center justify-center mb-6 mx-auto shadow-lg group-hover:animate-bounce">
-                <Gift className="w-12 h-12 text-primary-foreground" />
-              </div>
-              <h3 className="text-2xl font-bold mb-4 text-card-foreground">Redeem Your Reward</h3>
-              <p className="text-muted-foreground text-lg leading-relaxed">
-                Get your free drink or reward once your card is complete. It's that simple!
-              </p>
-            </CardContent>
-          </Card>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-6xl mx-auto text-center">
+            {/* 3D Cute Coffee Mascot */}
+            <div className="mb-8 animate-fade-in">
+              <CoffeeMascot3D />
+            </div>
+            
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
+              Your new digital stamp card —<br />
+              <span className="text-primary">earn free coffee effortlessly.</span>
+            </h1>
+            
+            <p className="text-lg md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+              Stamivo helps coffee shops grow loyal customers with one simple scan.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+              <Button
+                onClick={() => setShowModal(true)}
+                size="lg"
+                className="group text-xl px-12 py-8 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 bg-primary hover:bg-primary/90"
+              >
+                Get Started
+                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <Button
+                onClick={scrollToHowItWorks}
+                size="lg"
+                variant="outline"
+                className="text-xl px-12 py-8 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50"
+              >
+                How It Works
+              </Button>
+            </div>
+            
+            <p className="text-sm text-muted-foreground">
+              ☕ Join 500+ coffee shops already using Stamivo
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* For Coffee Shops Section */}
-      <section className="bg-gradient-to-br from-primary/5 to-accent/5 py-20 md:py-32">
+      {/* Story-Driven How It Works */}
+      <section id="how-it-works" className="relative py-20 md:py-32 bg-gradient-to-b from-background to-cream-beige/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-              For Coffee Shops —<br />
-              <span className="text-primary">More Loyalty, Zero Hassle</span>
+              How it works
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Three simple steps to transform one-time visitors into loyal regulars
+            </p>
+          </div>
+          
+          <div className="max-w-6xl mx-auto">
+            {/* Step 1 */}
+            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+              <div className="order-2 md:order-1">
+                <div className="bg-gradient-to-br from-primary/5 to-soft-orange/10 rounded-[3rem] p-8 md:p-12 relative">
+                  <div className="absolute -top-6 -left-6 w-16 h-16 bg-primary rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-xl">
+                    1
+                  </div>
+                  <div className="bg-white rounded-[2rem] p-8 shadow-xl">
+                    <div className="flex items-center justify-center gap-8">
+                      <div className="w-24 h-24 bg-gradient-to-br from-primary to-coffee-dark rounded-3xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                        <Coffee className="w-12 h-12 text-white" />
+                      </div>
+                      <div className="text-6xl">→</div>
+                      <div className="w-24 h-24 bg-gradient-to-br from-soft-orange to-accent rounded-3xl flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                        <Smartphone className="w-12 h-12 text-white" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="order-1 md:order-2">
+                <h3 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+                  Order & Scan
+                </h3>
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                  Order your favorite drink, then scan the shop's QR code. 
+                  Every purchase earns you a digital stamp — no paper cards to carry or lose.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 2 */}
+            <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
+              <div className="order-2">
+                <div className="bg-gradient-to-br from-soft-orange/5 to-accent/10 rounded-[3rem] p-8 md:p-12 relative">
+                  <div className="absolute -top-6 -left-6 w-16 h-16 bg-soft-orange rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-xl">
+                    2
+                  </div>
+                  <div className="bg-white rounded-[2rem] p-8 shadow-xl">
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        {[...Array(8)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-10 h-10 rounded-xl transition-all duration-500 ${
+                              i < 5 
+                                ? "bg-gradient-to-br from-primary to-coffee-dark shadow-lg scale-110" 
+                                : "bg-muted scale-95"
+                            }`}
+                            style={{ transitionDelay: `${i * 100}ms` }}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-sm font-bold text-primary">5/8 stamps collected!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="order-1">
+                <h3 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+                  Collect Stamps
+                </h3>
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                  Watch your digital stamp card fill up with delightful animations. 
+                  Track your progress across all your favorite coffee shops in one place.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="order-2 md:order-1">
+                <div className="bg-gradient-to-br from-success/5 to-primary/10 rounded-[3rem] p-8 md:p-12 relative">
+                  <div className="absolute -top-6 -left-6 w-16 h-16 bg-success rounded-2xl flex items-center justify-center text-white text-2xl font-bold shadow-xl">
+                    3
+                  </div>
+                  <div className="bg-white rounded-[2rem] p-8 shadow-xl relative overflow-hidden">
+                    <div className="text-center">
+                      <div className="text-6xl mb-2 animate-bounce">🎉</div>
+                      <p className="text-2xl font-bold text-success mb-2">Reward Unlocked!</p>
+                      <p className="text-muted-foreground">Free Coffee ☕</p>
+                    </div>
+                    {/* Confetti effect */}
+                    <div className="absolute top-0 left-1/4 text-2xl animate-bounce">✨</div>
+                    <div className="absolute top-2 right-1/4 text-2xl animate-bounce" style={{ animationDelay: '0.2s' }}>⭐</div>
+                    <div className="absolute bottom-2 left-1/3 text-2xl animate-bounce" style={{ animationDelay: '0.4s' }}>🌟</div>
+                  </div>
+                </div>
+              </div>
+              <div className="order-1 md:order-2">
+                <h3 className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
+                  Get Rewards
+                </h3>
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                  Complete your stamp card and celebrate with a free drink or treat! 
+                  Redeem instantly with a tap — it's that satisfying.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why Coffee Shops Love Us */}
+      <section className="relative py-20 md:py-32 bg-gradient-to-br from-primary/5 via-background to-soft-orange/5">
+        {/* Organic blob background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-soft-orange/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+              Why coffee shops<br />
+              <span className="text-primary">love Stamivo</span>
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Everything you need to build customer loyalty and grow your business
@@ -113,274 +200,270 @@ export default function Landing() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <Card className="hover:scale-105 transition-all duration-300 hover:shadow-xl">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
-                  <Zap className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-card-foreground">Easy Digital Stamps</h3>
-                <p className="text-muted-foreground">
-                  Quick QR scans replace old paper cards. Simple for you and your customers.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:scale-105 transition-all duration-300 hover:shadow-xl">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mb-4">
-                  <Store className="w-8 h-8 text-accent" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-card-foreground">Cleaner Counter</h3>
-                <p className="text-muted-foreground">
-                  No more lost or damaged paper cards cluttering your space.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:scale-105 transition-all duration-300 hover:shadow-xl">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-success/10 rounded-2xl flex items-center justify-center mb-4">
-                  <TrendingUp className="w-8 h-8 text-success" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-card-foreground">Faster Repeat Customers</h3>
-                <p className="text-muted-foreground">
-                  Digital rewards keep customers coming back more often.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:scale-105 transition-all duration-300 hover:shadow-xl">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mb-4">
-                  <Settings className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-card-foreground">Customizable Rewards</h3>
-                <p className="text-muted-foreground">
-                  Set your own stamp requirements, rewards, and redemption rules.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:scale-105 transition-all duration-300 hover:shadow-xl">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-accent/10 rounded-2xl flex items-center justify-center mb-4">
-                  <Clock className="w-8 h-8 text-accent" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-card-foreground">Simple Dashboard</h3>
-                <p className="text-muted-foreground">
-                  Track customer visits, popular rewards, and loyalty trends at a glance.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:scale-105 transition-all duration-300 hover:shadow-xl">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-success/10 rounded-2xl flex items-center justify-center mb-4">
-                  <HeadphonesIcon className="w-8 h-8 text-success" />
-                </div>
-                <h3 className="text-xl font-bold mb-2 text-card-foreground">24/7 Support</h3>
-                <p className="text-muted-foreground">
-                  We're always here to help you make the most of Stamivo.
-                </p>
-              </CardContent>
-            </Card>
+            {[
+              {
+                icon: <Smartphone className="w-8 h-8" />,
+                color: "from-primary to-coffee-dark",
+                title: "Digital loyalty cards customers actually use",
+                desc: "No app downloads required. Works instantly via web browser on any device."
+              },
+              {
+                icon: <TrendingUp className="w-8 h-8" />,
+                color: "from-soft-orange to-accent",
+                title: "Increase repeat visits effortlessly",
+                desc: "Turn first-time customers into regulars with rewards they can see and track."
+              },
+              {
+                icon: <Zap className="w-8 h-8" />,
+                color: "from-accent to-soft-orange",
+                title: "No app installation required",
+                desc: "Customers scan and go. Zero friction means more participation."
+              },
+              {
+                icon: <Coffee className="w-8 h-8" />,
+                color: "from-success to-forest-green",
+                title: "Custom rewards for your shop",
+                desc: "Set your own stamp goals and rewards. Make it uniquely yours."
+              },
+              {
+                icon: <BarChart3 className="w-8 h-8" />,
+                color: "from-primary to-soft-orange",
+                title: "Dashboard with instant insights",
+                desc: "See customer visits, popular rewards, and loyalty trends at a glance."
+              },
+              {
+                icon: <Star className="w-8 h-8" />,
+                color: "from-soft-orange to-primary",
+                title: "Setup in under 10 minutes",
+                desc: "Simple onboarding wizard. Start rewarding customers today."
+              }
+            ].map((item, i) => (
+              <Card 
+                key={i} 
+                className="group hover:scale-105 transition-all duration-300 hover:shadow-2xl border-2 hover:border-primary/30 bg-white/80 backdrop-blur"
+              >
+                <CardContent className="p-8">
+                  <div className={`w-16 h-16 bg-gradient-to-br ${item.color} rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg group-hover:scale-110 transition-transform`}>
+                    {item.icon}
+                  </div>
+                  <h3 className="text-xl font-bold mb-3 text-card-foreground leading-tight">
+                    {item.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {item.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="container mx-auto px-4 py-20 md:py-32">
-        <h2 className="text-4xl md:text-5xl font-bold text-center mb-4 text-foreground">
-          Loved by coffee shops & customers
-        </h2>
-        <p className="text-xl text-muted-foreground text-center mb-16 max-w-2xl mx-auto">
-          See what our community has to say
-        </p>
-
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <Card className="hover:scale-105 transition-all duration-300">
-            <CardContent className="p-8">
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-accent text-accent" />
-                ))}
-              </div>
-              <p className="text-muted-foreground mb-6 italic leading-relaxed">
-                "Stamivo has transformed how we reward our regulars. No more lost cards, and customers love the digital experience!"
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <Coffee className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <p className="font-bold text-card-foreground">The Daily Grind</p>
-                  <p className="text-sm text-muted-foreground">Seattle, WA</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:scale-105 transition-all duration-300">
-            <CardContent className="p-8">
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-accent text-accent" />
-                ))}
-              </div>
-              <p className="text-muted-foreground mb-6 italic leading-relaxed">
-                "I finally have all my coffee rewards in one place! The animations are so satisfying when you complete a card."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
-                  <span className="text-xl font-bold text-accent">SJ</span>
-                </div>
-                <div>
-                  <p className="font-bold text-card-foreground">Sarah Johnson</p>
-                  <p className="text-sm text-muted-foreground">Coffee Enthusiast</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:scale-105 transition-all duration-300">
-            <CardContent className="p-8">
-              <div className="flex gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 fill-accent text-accent" />
-                ))}
-              </div>
-              <p className="text-muted-foreground mb-6 italic leading-relaxed">
-                "Setup took less than 10 minutes. Our customers are already asking about it and engagement is through the roof!"
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center">
-                  <Coffee className="w-6 h-6 text-success" />
-                </div>
-                <div>
-                  <p className="font-bold text-card-foreground">Bean There Café</p>
-                  <p className="text-sm text-muted-foreground">Portland, OR</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Mobile App Preview Section */}
-      <section className="bg-gradient-to-br from-accent/5 to-primary/5 py-20 md:py-32">
+      {/* Product Showcase with Device Mockups */}
+      <section className="py-20 md:py-32 bg-gradient-to-b from-background to-cream-beige/30">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
-                Your rewards,<br />
-                <span className="text-primary">always in your pocket</span>
-              </h2>
-              <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                Track all your stamp cards, scan QR codes, and redeem rewards from one beautiful mobile experience.
-              </p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <span className="text-muted-foreground text-lg">Real-time stamp tracking with fun animations</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <span className="text-muted-foreground text-lg">Quick QR scanner built right in</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center flex-shrink-0 mt-1">
-                    <span className="text-white text-sm">✓</span>
-                  </div>
-                  <span className="text-muted-foreground text-lg">Celebrate rewards with delightful popups</span>
-                </li>
-              </ul>
-            </div>
-            <div className="relative">
-              <div className="bg-gradient-to-br from-primary/20 to-accent/20 rounded-[3rem] p-8 shadow-2xl">
-                <div className="bg-card rounded-[2.5rem] p-6 shadow-xl">
-                  <div className="space-y-6">
-                    {/* Mockup Header */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+              Your rewards,<br />
+              <span className="text-primary">always in your pocket</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Beautiful, intuitive interface designed for coffee lovers
+            </p>
+          </div>
+
+          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+            {/* Mockup 1: Stamp Card */}
+            <div className="group hover:scale-105 transition-all duration-500">
+              <div className="bg-gradient-to-br from-primary/10 to-soft-orange/10 rounded-[3rem] p-6 shadow-xl group-hover:shadow-2xl">
+                <div className="bg-white rounded-[2.5rem] p-6 shadow-lg">
+                  <div className="space-y-4">
                     <div className="text-center">
-                      <h3 className="text-2xl font-bold text-card-foreground mb-2">My Stamp Cards</h3>
-                      <p className="text-muted-foreground">3 active rewards</p>
+                      <p className="text-lg font-bold text-card-foreground">The Daily Grind</p>
+                      <p className="text-sm text-muted-foreground">Downtown Seattle</p>
                     </div>
-                    
-                    {/* Mockup Cards */}
-                    <div className="space-y-4">
-                      <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-4 border-2 border-primary/20">
-                        <p className="font-bold text-card-foreground mb-2">The Daily Grind</p>
-                        <div className="flex gap-2 mb-2">
-                          {[...Array(8)].map((_, i) => (
-                            <div
-                              key={i}
-                              className={`w-8 h-8 rounded-lg ${
-                                i < 6 ? "bg-primary" : "bg-muted"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-sm text-muted-foreground">6/8 stamps • 2 more for free coffee!</p>
-                      </div>
-                      
-                      <div className="bg-gradient-to-r from-accent/10 to-success/10 rounded-2xl p-4 border-2 border-accent/20">
-                        <p className="font-bold text-card-foreground mb-2">Bean There Café</p>
-                        <div className="flex gap-2 mb-2">
-                          {[...Array(10)].map((_, i) => (
-                            <div
-                              key={i}
-                              className={`w-6 h-6 rounded-lg ${
-                                i < 10 ? "bg-accent" : "bg-muted"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                        <p className="text-sm text-success font-bold">🎉 Reward ready!</p>
-                      </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {[...Array(8)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`aspect-square rounded-xl ${
+                            i < 6 
+                              ? "bg-gradient-to-br from-primary to-coffee-dark shadow-md" 
+                              : "bg-muted"
+                          }`}
+                        />
+                      ))}
                     </div>
-                    
-                    {/* Mockup CTA */}
-                    <Button className="w-full py-6 text-lg rounded-xl">
-                      <Smartphone className="mr-2" />
-                      Scan QR Code
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-primary">6/8 stamps</p>
+                      <p className="text-xs text-muted-foreground">2 more for free coffee! ☕</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="text-center mt-4 font-semibold text-foreground">Track Progress</p>
+            </div>
+
+            {/* Mockup 2: QR Scanner */}
+            <div className="group hover:scale-105 transition-all duration-500">
+              <div className="bg-gradient-to-br from-soft-orange/10 to-accent/10 rounded-[3rem] p-6 shadow-xl group-hover:shadow-2xl">
+                <div className="bg-gradient-to-b from-gray-900 to-gray-800 rounded-[2.5rem] p-6 shadow-lg aspect-[9/16] flex flex-col items-center justify-center">
+                  <div className="w-48 h-48 border-4 border-white rounded-2xl mb-4 relative">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-32 h-32 bg-white rounded-xl"></div>
+                    </div>
+                  </div>
+                  <p className="text-white font-bold text-lg mb-2">Scan QR Code</p>
+                  <p className="text-gray-300 text-sm text-center">Align code within frame</p>
+                </div>
+              </div>
+              <p className="text-center mt-4 font-semibold text-foreground">Quick Scan</p>
+            </div>
+
+            {/* Mockup 3: Reward Unlocked */}
+            <div className="group hover:scale-105 transition-all duration-500">
+              <div className="bg-gradient-to-br from-success/10 to-primary/10 rounded-[3rem] p-6 shadow-xl group-hover:shadow-2xl">
+                <div className="bg-white rounded-[2.5rem] p-6 shadow-lg">
+                  <div className="text-center space-y-4">
+                    <div className="text-7xl animate-bounce">🎉</div>
+                    <div>
+                      <p className="text-2xl font-bold text-success mb-2">Congratulations!</p>
+                      <p className="text-lg font-bold text-foreground">Card Complete</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-success/10 to-primary/10 rounded-2xl p-4">
+                      <p className="text-sm text-muted-foreground mb-2">Your Reward</p>
+                      <p className="text-xl font-bold text-primary">Free Coffee ☕</p>
+                    </div>
+                    <Button className="w-full bg-success hover:bg-success/90">
+                      Redeem Now
                     </Button>
                   </div>
                 </div>
               </div>
+              <p className="text-center mt-4 font-semibold text-foreground">Celebrate Rewards</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Final CTA Section */}
-      <section className="container mx-auto px-4 py-20 md:py-32 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h2 className="text-4xl md:text-6xl font-bold mb-6 text-foreground">
-            Ready to unlock<br />
-            <span className="text-primary">your free coffees?</span>
-          </h2>
-          <p className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Join thousands of coffee lovers and shop owners already using Stamivo
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              onClick={() => setShowModal(true)}
-              size="lg"
-              className="text-2xl px-16 py-8 rounded-full shadow-xl hover:scale-110 transition-all duration-300 bg-primary hover:bg-primary/90"
-            >
-              Get Started Free
-            </Button>
-            <Button
-              onClick={() => setShowModal(true)}
-              size="lg"
-              variant="outline"
-              className="text-2xl px-16 py-8 rounded-full shadow-xl hover:scale-110 transition-all duration-300"
-            >
-              For Coffee Shops
-            </Button>
+      {/* Social Proof / Testimonials */}
+      <section className="relative py-20 md:py-32 bg-gradient-to-br from-soft-orange/5 via-background to-primary/5">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-soft-orange/10 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+              Loved by coffee shops<br />
+              <span className="text-primary">& customers</span>
+            </h2>
+            <p className="text-xl text-muted-foreground">Real stories from our community</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {[
+              {
+                quote: "Stamivo has transformed how we reward our regulars. Customer engagement is up 40% and they love not carrying paper cards!",
+                name: "Maria Chen",
+                role: "Owner, The Daily Grind",
+                location: "Seattle, WA",
+                avatar: "MC",
+                color: "from-primary to-coffee-dark"
+              },
+              {
+                quote: "Finally, all my coffee rewards in one place! The animations are so satisfying when you complete a card. Best loyalty app I've used.",
+                name: "James Porter",
+                role: "Coffee Enthusiast",
+                location: "Portland, OR",
+                avatar: "JP",
+                color: "from-soft-orange to-accent"
+              },
+              {
+                quote: "Setup took less than 10 minutes. Our customers are already asking about it and our repeat visit rate is through the roof!",
+                name: "Sofia Martinez",
+                role: "Manager, Bean There Café",
+                location: "San Francisco, CA",
+                avatar: "SM",
+                color: "from-success to-forest-green"
+              }
+            ].map((testimonial, i) => (
+              <Card 
+                key={i} 
+                className="group hover:scale-105 transition-all duration-500 hover:shadow-2xl bg-white/90 backdrop-blur border-2 hover:border-primary/30"
+              >
+                <CardContent className="p-8">
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(5)].map((_, j) => (
+                      <Star key={j} className="w-5 h-5 fill-soft-orange text-soft-orange" />
+                    ))}
+                  </div>
+                  <p className="text-muted-foreground mb-6 italic leading-relaxed text-lg">
+                    "{testimonial.quote}"
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 bg-gradient-to-br ${testimonial.color} rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-110 transition-transform`}>
+                      {testimonial.avatar}
+                    </div>
+                    <div>
+                      <p className="font-bold text-card-foreground">{testimonial.name}</p>
+                      <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                      <p className="text-xs text-muted-foreground">{testimonial.location}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA - Premium & Confident */}
+      <section className="relative py-20 md:py-32 bg-gradient-to-br from-primary/10 via-soft-orange/10 to-primary/5">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-20 left-1/3 w-96 h-96 bg-soft-orange/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 right-1/3 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-5xl mx-auto text-center">
+            <div className="mb-8">
+              <div className="text-8xl animate-bounce inline-block">☕</div>
+            </div>
+            
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-foreground leading-tight">
+              Start building loyalty<br />
+              <span className="text-primary">today.</span>
+            </h2>
+            
+            <p className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+              Join thousands of coffee lovers and shop owners already using Stamivo. 
+              It's free to get started, and setup takes less than 10 minutes.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <Button
+                onClick={() => setShowModal(true)}
+                size="lg"
+                className="group text-2xl px-16 py-10 rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 bg-primary hover:bg-primary/90"
+              >
+                Create Free Shop Account
+                <ArrowRight className="ml-2 group-hover:translate-x-2 transition-transform" />
+              </Button>
+              <Button
+                onClick={() => setShowModal(true)}
+                size="lg"
+                variant="outline"
+                className="text-2xl px-16 py-10 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 border-2 hover:border-primary/50 bg-white/80 backdrop-blur"
+              >
+                Try as a Customer
+              </Button>
+            </div>
+            
+            <p className="text-sm text-muted-foreground mt-8">
+              ✓ No credit card required  •  ✓ Free forever plan available  •  ✓ Cancel anytime
+            </p>
           </div>
         </div>
       </section>

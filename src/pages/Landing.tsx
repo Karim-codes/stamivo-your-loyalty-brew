@@ -7,7 +7,14 @@ import ParticleBackground from "@/components/ParticleBackground";
 import AnimatedCoffeeIcon from "@/components/AnimatedCoffeeIcon";
 import ScrollReveal from "@/components/ScrollReveal";
 import PricingSection from "@/components/PricingSection";
-import FAQSection from "@/components/FAQSection";
+import Footer from "@/components/Footer";
+
+// Import illustrations
+import BaristaIllustration from "@/assets/Barista Illustration - Coffee Preparation.png";
+import WomanWithPhone from "@/assets/Woman Holding Phone - Standalone.png";
+import CoffeeCupIcon from "@/assets/Coffee Cup Icon - Standalone.png";
+import CoffeeBeans from "@/assets/Coffee Beans - Decorative UI Element.png";
+import WoodenTray from "@/assets/Wooden Tray - Standalone.png";
 
 export default function Landing() {
   const [showModal, setShowModal] = useState(false);
@@ -38,6 +45,18 @@ export default function Landing() {
               >
                 How It Works
               </Button>
+              <a
+                href="/pricing"
+                className="hidden md:inline-flex text-muted-foreground hover:text-primary transition-colors font-medium"
+              >
+                Pricing
+              </a>
+              <a
+                href="/about"
+                className="hidden md:inline-flex text-muted-foreground hover:text-primary transition-colors font-medium"
+              >
+                About
+              </a>
               <Button
                 onClick={() => setShowModal(true)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -61,49 +80,86 @@ export default function Landing() {
         </div>
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-6xl mx-auto text-center">
-            {/* Animated Coffee Icon with Steam */}
-            <div className="mb-8 animate-fade-in flex justify-center">
-              <AnimatedCoffeeIcon size="lg" />
+          <div className="max-w-6xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-12 items-center">
+              {/* Left side - Text content */}
+              <div className="text-center md:text-left order-2 md:order-1">
+                {/* Animated Coffee Icon with Steam */}
+                <div className="mb-8 animate-fade-in flex justify-center md:justify-start">
+                  <AnimatedCoffeeIcon size="lg" />
+                </div>
+                
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
+                  Your new digital stamp card —<br />
+                  <span className="text-primary">earn free coffee effortlessly.</span>
+                </h1>
+                
+                <p className="text-lg md:text-2xl text-muted-foreground mb-12 max-w-3xl leading-relaxed">
+                  Stamivo helps coffee shops grow loyal customers with one simple scan.
+                </p>
+                
+                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start items-center mb-8">
+                  <Button
+                    onClick={() => setShowModal(true)}
+                    size="lg"
+                    className="group text-xl px-12 py-8 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 bg-primary hover:bg-primary/90"
+                  >
+                    Get Started
+                    <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                  <Button
+                    onClick={scrollToHowItWorks}
+                    size="lg"
+                    variant="outline"
+                    className="text-xl px-12 py-8 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50"
+                  >
+                    How It Works
+                  </Button>
+                </div>
+                
+                <p className="text-sm text-muted-foreground">
+                  ☕ Join 500+ coffee shops already using Stamivo
+                </p>
+              </div>
+              
+              {/* Right side - Barista Illustration */}
+              <div className="order-1 md:order-2 relative">
+                <div className="relative animate-fade-in">
+                  {/* Decorative background circle */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-soft-orange/20 rounded-full blur-3xl scale-110" />
+                  <img 
+                    src={WomanWithPhone} 
+                    alt="Barista preparing coffee" 
+                    className="relative z-10 w-full h-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                  />
+                  {/* Floating coffee beans decoration */}
+                  <img 
+                    src={CoffeeBeans} 
+                    alt="Coffee beans" 
+                    className="absolute -bottom-8 -left-8 w-24 h-24 opacity-60 animate-bounce"
+                    style={{ animationDuration: '3s' }}
+                  />
+                </div>
+              </div>
             </div>
-            
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
-              Your new digital stamp card —<br />
-              <span className="text-primary">earn free coffee effortlessly.</span>
-            </h1>
-            
-            <p className="text-lg md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
-              Stamivo helps coffee shops grow loyal customers with one simple scan.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <Button
-                onClick={() => setShowModal(true)}
-                size="lg"
-                className="group text-xl px-12 py-8 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 bg-primary hover:bg-primary/90"
-              >
-                Get Started
-                <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button
-                onClick={scrollToHowItWorks}
-                size="lg"
-                variant="outline"
-                className="text-xl px-12 py-8 rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border-2 hover:border-primary/50"
-              >
-                How It Works
-              </Button>
-            </div>
-            
-            <p className="text-sm text-muted-foreground">
-              ☕ Join 500+ coffee shops already using Stamivo
-            </p>
           </div>
         </div>
       </section>
 
       {/* Story-Driven How It Works */}
-      <section id="how-it-works" className="relative py-20 md:py-32 bg-gradient-to-b from-background to-cream-beige/30">
+      <section id="how-it-works" className="relative py-20 md:py-32 bg-gradient-to-b from-background to-cream-beige/30 overflow-hidden">
+        {/* Decorative Coffee Beans */}
+        <img 
+          src={CoffeeBeans} 
+          alt="Coffee beans decoration" 
+          className="absolute top-40 left-10 w-24 h-24 opacity-15 rotate-12 hidden lg:block"
+        />
+        <img 
+          src={CoffeeCupIcon} 
+          alt="Coffee cup decoration" 
+          className="absolute bottom-40 right-10 w-28 h-28 opacity-15 rotate-[-20deg] hidden lg:block"
+        />
+        
         <div className="container mx-auto px-4">
           <ScrollReveal>
             <div className="text-center mb-16">
@@ -237,7 +293,7 @@ export default function Landing() {
         
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal>
-            <div className="text-center mb-20">
+            <div className="text-center mb-12">
               <div className="inline-block mb-4">
                 <span className="px-6 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold tracking-wide">
                   FOR COFFEE SHOPS
@@ -250,6 +306,28 @@ export default function Landing() {
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Everything you need to build customer loyalty and grow your business
               </p>
+            </div>
+          </ScrollReveal>
+
+          {/* Barista Hero Image */}
+          <ScrollReveal delay={0.1}>
+            <div className="max-w-xl mx-auto mb-16">
+              <div className="relative">
+                {/* Decorative background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-coffee-dark/20 to-primary/20 rounded-full blur-3xl scale-110" />
+                <img 
+                  src={BaristaIllustration} 
+                  alt="Barista preparing coffee with passion" 
+                  className="relative z-10 w-full h-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500 rounded-3xl"
+                />
+                {/* Floating coffee cup decoration */}
+                <img 
+                  src={CoffeeCupIcon} 
+                  alt="Coffee cup" 
+                  className="absolute -top-6 -right-6 w-16 h-16 opacity-40 rotate-12 animate-bounce hidden md:block"
+                  style={{ animationDuration: '2.5s' }}
+                />
+              </div>
             </div>
           </ScrollReveal>
 
@@ -462,106 +540,81 @@ export default function Landing() {
       </section>
 
       {/* Product Showcase with Device Mockups */}
-      <section className="py-20 md:py-32 bg-gradient-to-b from-background to-cream-beige/30">
+      <section className="py-20 md:py-32 bg-gradient-to-b from-background to-cream-beige/30 relative overflow-hidden">
+        {/* Decorative Coffee Cup */}
+        <img 
+          src={CoffeeCupIcon} 
+          alt="Coffee cup decoration" 
+          className="absolute top-20 right-10 w-32 h-32 opacity-20 rotate-12 hidden lg:block"
+        />
+        
         <div className="container mx-auto px-4">
+          {/* Hero Image with Woman Holding Phone */}
           <ScrollReveal>
-            <div className="text-center mb-16">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
-                Your rewards,<br />
-                <span className="text-primary">always in your pocket</span>
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Beautiful, intuitive interface designed for coffee lovers
-              </p>
+            <div className="max-w-4xl mx-auto mb-20">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="order-2 md:order-1">
+                  <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+                    Your rewards,<br />
+                    <span className="text-primary">always in your pocket</span>
+                  </h2>
+                  <p className="text-xl text-muted-foreground mb-6">
+                    Beautiful, intuitive interface designed for coffee lovers. Track all your loyalty cards in one place.
+                  </p>
+                  <div className="flex gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                        <Smartphone className="w-5 h-5 text-primary" />
+                      </div>
+                      <span className="text-sm font-medium">Mobile & Web</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 bg-success/10 rounded-full flex items-center justify-center">
+                        <Star className="w-5 h-5 text-success" />
+                      </div>
+                      <span className="text-sm font-medium">Easy to Use</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="order-1 md:order-2 relative">
+                  <div className="relative">
+                    {/* Background glow */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-soft-orange/30 to-primary/30 rounded-full blur-3xl scale-110" />
+                    <img 
+                      src={WoodenTray} 
+                      alt="Woman using Stamivo app on phone" 
+                      className="relative z-10 w-full h-auto drop-shadow-2xl hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </ScrollReveal>
 
-          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-            {/* Mockup 1: Stamp Card */}
-            <ScrollReveal delay={0.1}>
-              <div className="group hover:scale-105 transition-all duration-500">
-              <div className="bg-gradient-to-br from-primary/10 to-soft-orange/10 rounded-[3rem] p-6 shadow-xl group-hover:shadow-2xl">
-                <div className="bg-white rounded-[2.5rem] p-6 shadow-lg">
-                  <div className="space-y-4">
-                    <div className="text-center">
-                      <p className="text-lg font-bold text-card-foreground">The Daily Grind</p>
-                      <p className="text-sm text-muted-foreground">Downtown Seattle</p>
-                    </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[...Array(8)].map((_, i) => (
-                        <div
-                          key={i}
-                          className={`aspect-square rounded-xl ${
-                            i < 6 
-                              ? "bg-gradient-to-br from-primary to-coffee-dark shadow-md" 
-                              : "bg-muted"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-bold text-primary">6/8 stamps</p>
-                      <p className="text-xs text-muted-foreground">2 more for free coffee! ☕</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <p className="text-center mt-4 font-semibold text-foreground">Track Progress</p>
-            </div>
-            </ScrollReveal>
-
-            {/* Mockup 2: QR Scanner */}
-            <ScrollReveal delay={0.2}>
-              <div className="group hover:scale-105 transition-all duration-500">
-              <div className="bg-gradient-to-br from-soft-orange/10 to-accent/10 rounded-[3rem] p-6 shadow-xl group-hover:shadow-2xl">
-                <div className="bg-gradient-to-b from-gray-900 to-gray-800 rounded-[2.5rem] p-6 shadow-lg aspect-[9/16] flex flex-col items-center justify-center">
-                  <div className="w-48 h-48 border-4 border-white rounded-2xl mb-4 relative">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-32 h-32 bg-white rounded-xl"></div>
-                    </div>
-                  </div>
-                  <p className="text-white font-bold text-lg mb-2">Scan QR Code</p>
-                  <p className="text-gray-300 text-sm text-center">Align code within frame</p>
-                </div>
-              </div>
-              <p className="text-center mt-4 font-semibold text-foreground">Quick Scan</p>
-            </div>
-            </ScrollReveal>
-
-            {/* Mockup 3: Reward Unlocked */}
-            <ScrollReveal delay={0.3}>
-              <div className="group hover:scale-105 transition-all duration-500">
-              <div className="bg-gradient-to-br from-success/10 to-primary/10 rounded-[3rem] p-6 shadow-xl group-hover:shadow-2xl">
-                <div className="bg-white rounded-[2.5rem] p-6 shadow-lg">
-                  <div className="text-center space-y-4">
-                    <div className="text-7xl animate-bounce">🎉</div>
-                    <div>
-                      <p className="text-2xl font-bold text-success mb-2">Congratulations!</p>
-                      <p className="text-lg font-bold text-foreground">Card Complete</p>
-                    </div>
-                    <div className="bg-gradient-to-br from-success/10 to-primary/10 rounded-2xl p-4">
-                      <p className="text-sm text-muted-foreground mb-2">Your Reward</p>
-                      <p className="text-xl font-bold text-primary">Free Coffee ☕</p>
-                    </div>
-                    <Button className="w-full bg-success hover:bg-success/90">
-                      Redeem Now
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <p className="text-center mt-4 font-semibold text-foreground">Celebrate Rewards</p>
-            </div>
-            </ScrollReveal>
-          </div>
+          
         </div>
       </section>
 
       {/* Social Proof / Testimonials */}
-      <section className="relative py-20 md:py-32 bg-gradient-to-br from-soft-orange/5 via-background to-primary/5">
+      <section className="relative py-20 md:py-32 bg-gradient-to-br from-soft-orange/5 via-background to-primary/5 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
           <div className="absolute bottom-1/3 right-1/4 w-80 h-80 bg-soft-orange/10 rounded-full blur-3xl" />
         </div>
+        
+        {/* Decorative Wooden Tray */}
+        <img 
+          src={WoodenTray} 
+          alt="Wooden tray decoration" 
+          className="absolute bottom-10 left-10 w-48 h-48 opacity-15 rotate-[-15deg] hidden xl:block"
+        />
+        
+        {/* Decorative Coffee Beans */}
+        <img 
+          src={CoffeeBeans} 
+          alt="Coffee beans decoration" 
+          className="absolute top-20 right-20 w-32 h-32 opacity-20 rotate-45 hidden xl:block"
+        />
         
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal>
@@ -811,9 +864,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <FAQSection />
-
       {/* Final CTA - Premium & Confident */}
       <section className="relative py-20 md:py-32 bg-gradient-to-br from-primary/10 via-soft-orange/10 to-primary/5">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -866,6 +916,8 @@ export default function Landing() {
       </section>
 
       <UserTypeModal open={showModal} onOpenChange={setShowModal} />
+      
+      <Footer />
     </div>
   );
 }

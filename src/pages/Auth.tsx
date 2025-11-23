@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Coffee } from "lucide-react";
 
@@ -26,14 +27,42 @@ export default function Auth() {
         toast.error(error.message);
       } else {
         toast.success("Account created! Please check your email to verify.");
-        navigate("/customer");
+        // Wait a bit for role to be assigned
+        setTimeout(() => {
+          navigate("/customer");
+        }, 500);
       }
     } else {
       const { error } = await signIn(email, password);
       if (error) {
         toast.error(error.message);
-      } else {
-        toast.success("Welcome back!");
+        setLoading(false);
+        return;
+      }
+      
+      toast.success("Welcome back!");
+      
+      // Try to get user role and redirect accordingly
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: roleData } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (roleData?.role === 'business') {
+            navigate("/business/dashboard");
+          } else {
+            // Default to customer
+            navigate("/customer");
+          }
+        } else {
+          navigate("/customer");
+        }
+      } catch (err) {
+        console.error('Error checking role:', err);
         navigate("/customer");
       }
     }

@@ -2,11 +2,19 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { QrCode, ArrowRight, Gift, Coffee } from "lucide-react";
+import { QrCode, ArrowRight, Gift, Coffee, User, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface StampCard {
   id: string;
@@ -26,7 +34,7 @@ interface StampCard {
 
 export default function CustomerHome() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [stampCards, setStampCards] = useState<StampCard[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,6 +43,12 @@ export default function CustomerHome() {
       fetchStampCards();
     }
   }, [user]);
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out successfully");
+    navigate("/");
+  };
 
   const fetchStampCards = async () => {
     if (!user) return;
@@ -102,10 +116,42 @@ export default function CustomerHome() {
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 pb-20">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl shadow-lg">
-        <h1 className="text-3xl font-bold mb-2">My Stamps</h1>
-        <p className="text-primary-foreground/90">
-          Collect stamps and earn rewards!
-        </p>
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">My Stamps</h1>
+            <p className="text-primary-foreground/90">
+              Collect stamps and earn rewards!
+            </p>
+          </div>
+          
+          {/* Profile Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="rounded-full bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground"
+              >
+                <User className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium">My Account</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {user?.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
+                <LogOut className="mr-2 w-4 h-4" />
+                Sign Out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Shops */}

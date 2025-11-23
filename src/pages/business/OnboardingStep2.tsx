@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowRight, ArrowLeft, Upload } from "lucide-react";
+import { ArrowRight, ArrowLeft, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useState, useRef } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface OnboardingStep2Props {
   formData: {
@@ -36,6 +38,11 @@ export default function OnboardingStep2({
   onNext,
   onBack,
 }: OnboardingStep2Props) {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string>(formData.shopLogo || "");
+  
   const canProceed = formData.shopName && formData.shopAddress;
 
   const toggleCoffeeType = (type: string) => {
@@ -44,6 +51,67 @@ export default function OnboardingStep2({
       updateFormData({ coffeeTypes: current.filter((t) => t !== type) });
     } else {
       updateFormData({ coffeeTypes: [...current, type] });
+    }
+  };
+
+  const handleFileChange = (file: File | null) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image file (PNG, JPG, etc.)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      setLogoPreview(result);
+      updateFormData({ shopLogo: result });
+      toast({
+        title: "Logo uploaded",
+        description: "Your shop logo has been uploaded successfully",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    handleFileChange(file);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const removeLogo = () => {
+    setLogoPreview("");
+    updateFormData({ shopLogo: "" });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -84,16 +152,66 @@ export default function OnboardingStep2({
         </div>
 
         <div className="space-y-3">
-          <Label className="text-lg font-medium">Shop logo</Label>
-          <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer">
-            <Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">
-              Click to upload or drag and drop
-            </p>
-            <p className="text-sm text-muted-foreground mt-2">
-              PNG, JPG up to 5MB
-            </p>
-          </div>
+          <Label className="text-lg font-medium">Shop logo (optional)</Label>
+          {logoPreview ? (
+            <div className="relative border-2 border-border rounded-lg p-4">
+              <div className="flex items-center gap-4">
+                <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted flex items-center justify-center">
+                  <img 
+                    src={logoPreview} 
+                    alt="Shop logo preview" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-foreground">Logo uploaded</p>
+                  <p className="text-sm text-muted-foreground">Your shop logo is ready</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={removeLogo}
+                  className="hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div
+              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${
+                isDragging
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary hover:bg-accent/50"
+              }`}
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
+              />
+              <div className="flex flex-col items-center">
+                {isDragging ? (
+                  <ImageIcon className="w-12 h-12 mb-4 text-primary animate-bounce" />
+                ) : (
+                  <Upload className="w-12 h-12 mb-4 text-muted-foreground" />
+                )}
+                <p className="text-muted-foreground font-medium mb-1">
+                  {isDragging ? "Drop your image here" : "Click to upload or drag and drop"}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  PNG, JPG up to 5MB
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-3">

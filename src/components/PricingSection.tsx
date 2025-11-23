@@ -7,52 +7,40 @@ export default function PricingSection() {
   const plans = [
     {
       name: "Starter",
-      price: "Free",
-      period: "forever",
+      price: "£15",
+      period: "mo",
       description: "Perfect for small coffee shops just getting started",
       features: [
-        "Up to 100 customers",
-        "1 loyalty program",
-        "Basic analytics",
-        "QR code generation",
-        "Email support",
-        "Mobile-friendly dashboard"
+        "Unlimited stamps",
+        "Custom rewards",
+        "QR system",
+        "Dashboard"
       ],
       color: "from-soft-orange to-accent",
       popular: false
     },
     {
-      name: "Professional",
-      price: "$29",
-      period: "per month",
+      name: "Growth",
+      price: "£29",
+      period: "mo",
       description: "Ideal for growing coffee shops and cafés",
       features: [
-        "Unlimited customers",
-        "Multiple loyalty programs",
-        "Advanced analytics & insights",
-        "Custom branding",
-        "Priority support",
-        "Marketing tools",
-        "Customer segments",
-        "API access"
+        "Everything in Starter, plus:",
+        "Detailed analytics",
+        "Customer insights",
+        "Email reminders (\"You're 1 stamp away!\")"
       ],
       color: "from-primary to-coffee-dark",
       popular: true
     },
     {
-      name: "Enterprise",
+      name: "Add-Ons",
       price: "Custom",
-      period: "contact us",
-      description: "For chains and large operations",
+      period: "",
+      description: "Enhance your plan with additional features",
       features: [
-        "Everything in Professional",
-        "Multi-location management",
-        "Dedicated account manager",
-        "Custom integrations",
-        "White-label solution",
-        "Advanced security",
-        "SLA guarantee",
-        "Training & onboarding"
+        "Multi-branch support: +£10/mo",
+        "Custom branded page: +£15/mo"
       ],
       color: "from-forest-green to-success",
       popular: false
@@ -118,7 +106,7 @@ export default function PricingSection() {
                     }`}
                     variant={plan.popular ? "default" : "outline"}
                   >
-                    {plan.name === "Enterprise" ? "Contact Sales" : "Get Started"}
+                    {plan.name === "Add-Ons" ? "Contact Sales" : "Get Started"}
                   </Button>
 
                   <div className="space-y-3">

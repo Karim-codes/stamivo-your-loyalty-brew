@@ -6,9 +6,9 @@ import ParticleBackground from "@/components/ParticleBackground";
 import Footer from "@/components/Footer";
 
 // Import illustrations
-import BaristaIllustration from "@/assets/Barista Illustration - Coffee Preparation.png";
-import CoffeeBeans from "@/assets/Coffee Beans - Decorative UI Element.png";
-import CoffeeCupIcon from "@/assets/Coffee Cup Icon - Standalone.png";
+import BaristaIllustration from "@/assets/barista-illustration.png";
+import CoffeeBeans from "@/assets/coffee-beans.png";
+import CoffeeCupIcon from "@/assets/coffee-cup-icon.png";
 
 export default function About() {
   const team = [

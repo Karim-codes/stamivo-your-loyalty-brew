@@ -10,11 +10,11 @@ import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
 
 // Import illustrations
-import BaristaIllustration from "@/assets/Barista Illustration - Coffee Preparation.png";
-import WomanWithPhone from "@/assets/Woman Holding Phone - Standalone.png";
-import CoffeeCupIcon from "@/assets/Coffee Cup Icon - Standalone.png";
-import CoffeeBeans from "@/assets/Coffee Beans - Decorative UI Element.png";
-import WoodenTray from "@/assets/Wooden Tray - Standalone.png";
+import BaristaIllustration from "@/assets/barista-illustration.png";
+import WomanWithPhone from "@/assets/woman-with-phone.png";
+import CoffeeCupIcon from "@/assets/coffee-cup-icon.png";
+import CoffeeBeans from "@/assets/coffee-beans.png";
+import WoodenTray from "@/assets/wooden-tray.png";
 
 export default function Landing() {
   const [showModal, setShowModal] = useState(false);

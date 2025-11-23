@@ -1,110 +1,204 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { QrCode, Gift } from "lucide-react";
+import { QrCode, ArrowRight, Gift, Coffee } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+
+interface StampCard {
+  id: string;
+  stamps_collected: number;
+  is_completed: boolean;
+  business: {
+    id: string;
+    business_name: string;
+    address: string;
+    logo_url: string | null;
+  };
+  loyalty_program: {
+    stamps_required: number;
+    reward_description: string;
+  };
+}
 
 export default function CustomerHome() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [stampCards, setStampCards] = useState<StampCard[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data for demonstration
-  const shops = [
-    {
-      id: 1,
-      name: "Brew & Bean",
-      address: "123 Coffee St",
-      stampsCollected: 3,
-      stampsRequired: 5,
-      reward: "Free coffee of choice",
-    },
-    {
-      id: 2,
-      name: "The Daily Grind",
-      address: "456 Main Ave",
-      stampsCollected: 7,
-      stampsRequired: 8,
-      reward: "Free pastry + coffee",
-    },
-  ];
+  useEffect(() => {
+    if (user) {
+      fetchStampCards();
+    }
+  }, [user]);
+
+  const fetchStampCards = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('stamp_cards')
+        .select(`
+          id,
+          stamps_collected,
+          is_completed,
+          businesses!inner (
+            id,
+            business_name,
+            address,
+            logo_url
+          )
+        `)
+        .eq('customer_id', user.id)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch loyalty programs for each business
+      const cardsWithPrograms = await Promise.all(
+        (data || []).map(async (card: any) => {
+          const { data: programData } = await supabase
+            .from('loyalty_programs')
+            .select('stamps_required, reward_description')
+            .eq('business_id', card.businesses.id)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          return {
+            id: card.id,
+            stamps_collected: card.stamps_collected,
+            is_completed: card.is_completed,
+            business: card.businesses,
+            loyalty_program: programData || { stamps_required: 5, reward_description: 'Free reward' },
+          };
+        })
+      );
+
+      setStampCards(cardsWithPrograms);
+    } catch (error: any) {
+      console.error('Error fetching stamp cards:', error);
+      toast.error("Failed to load your stamp cards");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading your stamps...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">My Stamps</h1>
-          <p className="text-muted-foreground">Keep collecting to earn rewards!</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 pb-20">
+      {/* Header */}
+      <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl shadow-lg">
+        <h1 className="text-3xl font-bold mb-2">My Stamps</h1>
+        <p className="text-primary-foreground/90">
+          Collect stamps and earn rewards!
+        </p>
+      </div>
 
-        <div className="space-y-4 mb-8">
-          {shops.map((shop) => {
-            const progress = (shop.stampsCollected / shop.stampsRequired) * 100;
-            const isComplete = shop.stampsCollected >= shop.stampsRequired;
-
-            return (
-              <Card
-                key={shop.id}
-                className={`p-6 transition-all hover:shadow-lg ${
-                  isComplete ? "border-2 border-success" : ""
-                }`}
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-bold text-lg">{shop.name}</h3>
-                    <p className="text-sm text-muted-foreground">{shop.address}</p>
-                  </div>
-                  {isComplete && (
-                    <Gift className="w-6 h-6 text-success animate-bounce" />
-                  )}
-                </div>
-
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-medium">
-                      {shop.stampsCollected}/{shop.stampsRequired} stamps
-                    </span>
-                  </div>
-                  <Progress value={progress} className="h-3" />
-                </div>
-
-                <div className="flex gap-2 mb-4">
-                  {Array.from({ length: shop.stampsRequired }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`flex-1 aspect-square rounded-full border-2 flex items-center justify-center text-2xl transition-all ${
-                        i < shop.stampsCollected
-                          ? "bg-primary border-primary scale-110"
-                          : "border-muted"
-                      }`}
-                    >
-                      {i < shop.stampsCollected ? "☕" : ""}
+      {/* Shops */}
+      <div className="container mx-auto px-4 py-6 space-y-4">
+        {stampCards.length === 0 ? (
+          <Card className="p-8 text-center space-y-4">
+            <Coffee className="w-16 h-16 mx-auto text-muted-foreground" />
+            <div>
+              <h3 className="text-xl font-bold mb-2">No stamp cards yet</h3>
+              <p className="text-muted-foreground">
+                Scan a QR code at a coffee shop to start collecting stamps!
+              </p>
+            </div>
+            <Button onClick={() => navigate("/customer/scan")} size="lg">
+              <QrCode className="mr-2 w-5 h-5" />
+              Scan QR Code
+            </Button>
+          </Card>
+        ) : (
+          stampCards.map((card) => (
+            <Card
+              key={card.id}
+              className="p-6 hover:shadow-lg transition-all cursor-pointer"
+              onClick={() => navigate("/customer/rewards")}
+            >
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex gap-3 items-start">
+                  {card.business.logo_url ? (
+                    <img
+                      src={card.business.logo_url}
+                      alt={card.business.business_name}
+                      className="w-12 h-12 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Coffee className="w-6 h-6 text-primary" />
                     </div>
-                  ))}
-                </div>
-
-                {isComplete ? (
-                  <div className="bg-success/10 border border-success/20 rounded-lg p-4">
-                    <p className="text-sm font-medium text-success text-center">
-                      🎉 {shop.reward}
+                  )}
+                  <div>
+                    <h3 className="text-xl font-bold mb-1">{card.business.business_name}</h3>
+                    <p className="text-xs text-muted-foreground">{card.business.address}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {card.stamps_collected} / {card.loyalty_program.stamps_required} stamps
                     </p>
-                    <Button className="w-full mt-3" variant="default">
-                      Redeem Now
-                    </Button>
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center">
-                    Reward: {shop.reward}
-                  </p>
-                )}
-              </Card>
-            );
-          })}
-        </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground" />
+              </div>
 
+              <Progress
+                value={(card.stamps_collected / card.loyalty_program.stamps_required) * 100}
+                className="h-3 mb-4"
+              />
+
+              {/* Stamp visualization */}
+              <div className="flex gap-2 mb-4 flex-wrap">
+                {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-lg transition-all ${
+                      i < card.stamps_collected
+                        ? "bg-primary border-primary text-primary-foreground animate-in zoom-in"
+                        : "border-muted text-muted"
+                    }`}
+                  >
+                    {i < card.stamps_collected ? "☕" : ""}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 text-sm bg-success/10 text-success p-3 rounded-lg">
+                <Gift className="w-4 h-4" />
+                <span className="font-medium">{card.loyalty_program.reward_description}</span>
+              </div>
+
+              {card.is_completed && (
+                <div className="mt-3 text-center">
+                  <span className="inline-block bg-success text-success-foreground px-4 py-2 rounded-full text-sm font-medium">
+                    🎉 Ready to redeem!
+                  </span>
+                </div>
+              )}
+            </Card>
+          ))
+        )}
+      </div>
+
+      {/* Floating Scan Button */}
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
         <Button
           onClick={() => navigate("/customer/scan")}
           size="lg"
-          className="w-full h-16 text-xl rounded-full shadow-lg hover:scale-105 transition-all"
+          className="h-16 px-8 text-lg rounded-full shadow-2xl hover:scale-105 transition-all"
         >
           <QrCode className="mr-2 w-6 h-6" />
           Scan QR Code

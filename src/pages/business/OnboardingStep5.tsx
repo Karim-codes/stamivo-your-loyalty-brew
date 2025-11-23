@@ -7,18 +7,85 @@ import { Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { OnboardingFormData } from "@/hooks/useOnboardingData";
 
 interface OnboardingStep5Props {
-  onSignUp: () => void;
+  formData: OnboardingFormData;
 }
 
-export default function OnboardingStep5({ onSignUp }: OnboardingStep5Props) {
+export default function OnboardingStep5({ formData }: OnboardingStep5Props) {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
+
+  const saveBusinessData = async (userId: string) => {
+    try {
+      // Insert business data
+      const { data: businessData, error: businessError } = await supabase
+        .from('businesses')
+        .insert({
+          owner_id: userId,
+          business_name: formData.shopName,
+          business_type: formData.businessType,
+          business_size: formData.businessSize,
+          daily_customers: formData.dailyCustomers,
+          address: formData.shopAddress,
+          opening_hours: formData.openingHours ? { text: formData.openingHours } : null,
+          had_previous_loyalty: formData.hasLoyalty === 'yes',
+          is_public: formData.publicShop,
+        })
+        .select()
+        .single();
+
+      if (businessError) throw businessError;
+
+      // Insert loyalty program
+      const { error: loyaltyError } = await supabase
+        .from('loyalty_programs')
+        .insert({
+          business_id: businessData.id,
+          stamps_required: formData.stampsRequired,
+          reward_description: formData.rewardDescription,
+          reward_type: formData.rewardType,
+          allow_multiple_scans: formData.multipleScans,
+          auto_verify: formData.autoVerify,
+          coffee_types: formData.coffeeTypes.length > 0 ? formData.coffeeTypes : null,
+        });
+
+      if (loyaltyError) throw loyaltyError;
+
+      // Insert menu items from coffee types
+      if (formData.coffeeTypes.length > 0) {
+        const menuItems = formData.coffeeTypes.map((type, index) => ({
+          business_id: businessData.id,
+          name: type,
+          category: 'Coffee',
+          is_available: true,
+          is_reward_eligible: true,
+          display_order: index,
+        }));
+
+        const { error: menuError } = await supabase
+          .from('menu_items')
+          .insert(menuItems);
+
+        if (menuError) console.error('Error creating menu items:', menuError);
+      }
+
+      // Clear localStorage after successful save
+      localStorage.removeItem('stamivo_onboarding_data');
+      
+      toast.success("Business created successfully!");
+      navigate("/business/dashboard");
+    } catch (error: any) {
+      console.error('Error saving business:', error);
+      toast.error("Failed to save business data: " + error.message);
+    }
+  };
 
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,8 +97,17 @@ export default function OnboardingStep5({ onSignUp }: OnboardingStep5Props) {
       setLoading(false);
     } else {
       toast.success("Account created! Saving your business...");
-      onSignUp();
-      navigate("/business/dashboard");
+      
+      // Wait a bit for the user to be created and session established
+      setTimeout(async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await saveBusinessData(user.id);
+        } else {
+          toast.error("Failed to get user data");
+        }
+        setLoading(false);
+      }, 1000);
     }
   };
 

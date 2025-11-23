@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Coffee, Smartphone, Star, TrendingUp, Zap, BarChart3, ArrowRight } from "lucide-react";
 import { UserTypeModal } from "@/components/UserTypeModal";
-import CoffeeMascot3D from "@/components/CoffeeMascot3D";
 import ParticleBackground from "@/components/ParticleBackground";
 import ScrollReveal from "@/components/ScrollReveal";
 import PricingSection from "@/components/PricingSection";
@@ -62,9 +61,11 @@ export default function Landing() {
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-6xl mx-auto text-center">
-            {/* 3D Cute Coffee Mascot */}
-            <div className="mb-8 animate-fade-in">
-              <CoffeeMascot3D />
+            {/* Coffee Icon */}
+            <div className="mb-8 animate-fade-in flex justify-center">
+              <div className="group">
+                <Coffee className="w-32 h-32 md:w-40 md:h-40 text-primary group-hover:rotate-12 transition-transform duration-300 filter drop-shadow-2xl" />
+              </div>
             </div>
             
             <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
@@ -495,8 +496,10 @@ export default function Landing() {
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal>
             <div className="max-w-5xl mx-auto text-center">
-              <div className="mb-8">
-                <div className="text-8xl animate-bounce inline-block">☕</div>
+              <div className="mb-8 flex justify-center">
+                <div className="group">
+                  <Coffee className="w-24 h-24 md:w-32 md:h-32 text-primary group-hover:rotate-12 transition-transform duration-300 filter drop-shadow-2xl" />
+                </div>
               </div>
               
               <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 text-foreground leading-tight">

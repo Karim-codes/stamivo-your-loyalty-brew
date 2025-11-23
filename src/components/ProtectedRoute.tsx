@@ -11,23 +11,31 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const [hasRole, setHasRole] = useState<boolean | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
   const [checkingRole, setCheckingRole] = useState(true);
 
   useEffect(() => {
     const checkRole = async () => {
-      if (!user || !requiredRole) {
+      if (!user) {
         setCheckingRole(false);
         return;
       }
 
+      // Get user's actual role
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .eq('role', requiredRole)
         .maybeSingle();
 
-      setHasRole(!!data && !error);
+      if (data && !error) {
+        setUserRole(data.role);
+        setHasRole(requiredRole ? data.role === requiredRole : true);
+      } else {
+        setUserRole(null);
+        setHasRole(false);
+      }
+      
       setCheckingRole(false);
     };
 
@@ -48,8 +56,15 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
-  if (requiredRole && !hasRole) {
-    return <Navigate to="/" replace />;
+  if (requiredRole && hasRole === false) {
+    // Redirect based on user's actual role
+    if (userRole === 'business') {
+      return <Navigate to="/business/dashboard" replace />;
+    } else if (userRole === 'customer') {
+      return <Navigate to="/customer" replace />;
+    }
+    // No role found - redirect to auth
+    return <Navigate to="/auth" replace />;
   }
 
   return <>{children}</>;

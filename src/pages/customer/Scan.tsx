@@ -13,8 +13,12 @@ export default function Scan() {
   const { user } = useAuth();
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const lastScanTimeRef = useRef<number>(0);
   const qrCodeRegionId = "qr-reader";
+  
+  const COOLDOWN_DURATION = 3; // 3 seconds cooldown
 
   useEffect(() => {
     startScanning();
@@ -62,10 +66,33 @@ export default function Scan() {
   };
 
   const onScanSuccess = async (decodedText: string) => {
+    // Check cooldown period
+    const now = Date.now();
+    const timeSinceLastScan = (now - lastScanTimeRef.current) / 1000;
+    
+    if (timeSinceLastScan < COOLDOWN_DURATION) {
+      const remaining = Math.ceil(COOLDOWN_DURATION - timeSinceLastScan);
+      toast.info(`Please wait ${remaining}s before scanning again`);
+      return;
+    }
+    
     if (scanned) return; // Prevent multiple scans
     
+    lastScanTimeRef.current = now;
     setScanned(true);
     await stopScanning();
+    
+    // Start cooldown countdown
+    setCooldownSeconds(COOLDOWN_DURATION);
+    const countdownInterval = setInterval(() => {
+      setCooldownSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(countdownInterval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
     try {
       // Parse QR code data (expecting format: business_id)
@@ -97,6 +124,8 @@ export default function Scan() {
 
       if (!loyaltyProgram) {
         toast.error("Business loyalty program not found");
+        setScanned(false);
+        startScanning();
         return;
       }
 
@@ -147,10 +176,10 @@ export default function Scan() {
         description: "Check your rewards to see your progress"
       });
 
-      // Navigate back to customer home after 2 seconds
+      // Navigate back to customer home after showing success
       setTimeout(() => {
         navigate("/customer");
-      }, 2000);
+      }, 2500);
 
     } catch (error: any) {
       console.error("Error processing scan:", error);
@@ -208,12 +237,21 @@ export default function Scan() {
               )}
 
               <div className="space-y-4">
-                <div className="flex items-center justify-center gap-4">
-                  <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
-                  <span className="text-sm text-muted-foreground">
-                    Looking for QR code...
-                  </span>
-                </div>
+                {cooldownSeconds > 0 ? (
+                  <div className="flex items-center justify-center gap-4 bg-secondary/50 p-4 rounded-lg">
+                    <div className="w-4 h-4 bg-orange-500 rounded-full" />
+                    <span className="text-sm font-medium">
+                      Cooldown: {cooldownSeconds}s
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
+                    <span className="text-sm text-muted-foreground">
+                      Looking for QR code...
+                    </span>
+                  </div>
+                )}
               </div>
             </>
           )}

@@ -1,10 +1,168 @@
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Camera, ArrowLeft } from "lucide-react";
+import { Camera, ArrowLeft, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Html5Qrcode } from "html5-qrcode";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function Scan() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [scanning, setScanning] = useState(false);
+  const [scanned, setScanned] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
+  const qrCodeRegionId = "qr-reader";
+
+  useEffect(() => {
+    startScanning();
+
+    return () => {
+      stopScanning();
+    };
+  }, []);
+
+  const startScanning = async () => {
+    try {
+      if (!scannerRef.current) {
+        scannerRef.current = new Html5Qrcode(qrCodeRegionId);
+      }
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 }
+      };
+
+      await scannerRef.current.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess,
+        onScanFailure
+      );
+      
+      setScanning(true);
+    } catch (error: any) {
+      console.error("Error starting scanner:", error);
+      toast.error("Failed to start camera. Please check permissions.");
+    }
+  };
+
+  const stopScanning = async () => {
+    if (scannerRef.current && scanning) {
+      try {
+        await scannerRef.current.stop();
+        scannerRef.current.clear();
+        setScanning(false);
+      } catch (error) {
+        console.error("Error stopping scanner:", error);
+      }
+    }
+  };
+
+  const onScanSuccess = async (decodedText: string) => {
+    if (scanned) return; // Prevent multiple scans
+    
+    setScanned(true);
+    await stopScanning();
+
+    try {
+      // Parse QR code data (expecting format: business_id)
+      const businessId = decodedText;
+
+      if (!user) {
+        toast.error("Please sign in to collect stamps");
+        navigate("/auth");
+        return;
+      }
+
+      // Get or create stamp card
+      let { data: stampCard, error: fetchError } = await supabase
+        .from('stamp_cards')
+        .select('*')
+        .eq('customer_id', user.id)
+        .eq('business_id', businessId)
+        .eq('is_completed', false)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+
+      // Get loyalty program details
+      const { data: loyaltyProgram } = await supabase
+        .from('loyalty_programs')
+        .select('stamps_required')
+        .eq('business_id', businessId)
+        .single();
+
+      if (!loyaltyProgram) {
+        toast.error("Business loyalty program not found");
+        return;
+      }
+
+      if (!stampCard) {
+        // Create new stamp card
+        const { data: newCard, error: createError } = await supabase
+          .from('stamp_cards')
+          .insert({
+            customer_id: user.id,
+            business_id: businessId,
+            stamps_collected: 1
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        stampCard = newCard;
+      } else {
+        // Update existing stamp card
+        const newStampCount = stampCard.stamps_collected + 1;
+        const isCompleted = newStampCount >= loyaltyProgram.stamps_required;
+
+        const { error: updateError } = await supabase
+          .from('stamp_cards')
+          .update({
+            stamps_collected: newStampCount,
+            is_completed: isCompleted,
+            completed_at: isCompleted ? new Date().toISOString() : null
+          })
+          .eq('id', stampCard.id);
+
+        if (updateError) throw updateError;
+      }
+
+      // Create stamp transaction
+      const { error: transactionError } = await supabase
+        .from('stamp_transactions')
+        .insert({
+          customer_id: user.id,
+          business_id: businessId,
+          stamp_card_id: stampCard.id,
+          status: 'verified'
+        });
+
+      if (transactionError) throw transactionError;
+
+      toast.success("Stamp collected! ☕", {
+        description: "Check your rewards to see your progress"
+      });
+
+      // Navigate back to customer home after 2 seconds
+      setTimeout(() => {
+        navigate("/customer");
+      }, 2000);
+
+    } catch (error: any) {
+      console.error("Error processing scan:", error);
+      toast.error("Failed to collect stamp. Please try again.");
+      setScanned(false);
+      startScanning();
+    }
+  };
+
+  const onScanFailure = (error: string) => {
+    // Silently ignore scan failures - they happen constantly while scanning
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -26,24 +184,39 @@ export default function Scan() {
         </div>
 
         <Card className="p-8 mb-8">
-          <div className="aspect-square bg-muted/30 rounded-lg flex items-center justify-center mb-6 border-4 border-dashed border-border">
-            <div className="text-center">
-              <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <p className="text-muted-foreground">Camera scanner</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                (Would be active camera in production)
-              </p>
+          {scanned ? (
+            <div className="aspect-square bg-success/10 rounded-lg flex items-center justify-center mb-6 border-4 border-success">
+              <div className="text-center">
+                <CheckCircle className="w-16 h-16 mx-auto mb-4 text-success" />
+                <p className="text-lg font-semibold text-success">Stamp Collected!</p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Redirecting you back...
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <>
+              <div id={qrCodeRegionId} className="rounded-lg overflow-hidden mb-6"></div>
+              
+              {!scanning && (
+                <div className="aspect-square bg-muted/30 rounded-lg flex items-center justify-center mb-6 border-4 border-dashed border-border">
+                  <div className="text-center">
+                    <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">Initializing camera...</p>
+                  </div>
+                </div>
+              )}
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
-              <span className="text-sm text-muted-foreground">
-                Looking for QR code...
-              </span>
-            </div>
-          </div>
+              <div className="space-y-4">
+                <div className="flex items-center justify-center gap-4">
+                  <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
+                  <span className="text-sm text-muted-foreground">
+                    Looking for QR code...
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
         </Card>
 
         <div className="bg-secondary/50 rounded-lg p-6 text-center">

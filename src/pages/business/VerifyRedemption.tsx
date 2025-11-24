@@ -65,23 +65,45 @@ export default function VerifyRedemption() {
           is_redeemed,
           redeemed_at,
           customer_id,
-          profiles!rewards_redeemed_customer_id_fkey (
-            full_name,
-            email
-          ),
-          stamp_cards!inner (
-            stamps_collected
-          )
+          stamp_card_id
         `)
         .eq('business_id', businessData.id)
         .eq('redemption_code', code.trim())
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-      if (redemptionError) throw redemptionError;
+      if (redemptionError) {
+        console.error("Error fetching redemption:", redemptionError);
+        throw redemptionError;
+      }
 
       if (!redemptionData) {
         setError("Code not found. Please check the code and try again.");
         return;
+      }
+
+      // Get customer profile
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', redemptionData.customer_id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      }
+
+      // Get stamp card details
+      const { data: stampCardData, error: stampCardError } = await supabase
+        .from('stamp_cards')
+        .select('stamps_collected')
+        .eq('id', redemptionData.stamp_card_id)
+        .single();
+
+      if (stampCardError) {
+        console.error("Error fetching stamp card:", stampCardError);
+        throw stampCardError;
       }
 
       // Get loyalty program details
@@ -91,7 +113,10 @@ export default function VerifyRedemption() {
         .eq('business_id', businessData.id)
         .single();
 
-      if (programError) throw programError;
+      if (programError) {
+        console.error("Error fetching loyalty program:", programError);
+        throw programError;
+      }
 
       setRedemption({
         id: redemptionData.id,
@@ -99,8 +124,8 @@ export default function VerifyRedemption() {
         code_expires_at: redemptionData.code_expires_at,
         is_redeemed: redemptionData.is_redeemed,
         redeemed_at: redemptionData.redeemed_at,
-        customer: redemptionData.profiles,
-        stamp_card: redemptionData.stamp_cards,
+        customer: profileData || { full_name: null, email: null },
+        stamp_card: stampCardData,
         loyalty_program: programData
       });
     } catch (error: any) {

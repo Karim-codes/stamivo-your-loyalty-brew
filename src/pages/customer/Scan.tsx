@@ -14,7 +14,6 @@ export default function Scan() {
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const processingRef = useRef(false);
   const qrCodeRegionId = "qr-reader";
 
   useEffect(() => {
@@ -51,11 +50,9 @@ export default function Scan() {
   };
 
   const stopScanning = async () => {
-    if (scannerRef.current) {
+    if (scannerRef.current && scanning) {
       try {
-        if (scanning) {
-          await scannerRef.current.stop();
-        }
+        await scannerRef.current.stop();
         scannerRef.current.clear();
         setScanning(false);
       } catch (error) {
@@ -65,23 +62,10 @@ export default function Scan() {
   };
 
   const onScanSuccess = async (decodedText: string) => {
-    // Prevent multiple scans with both state and ref
-    if (scanned || processingRef.current) return;
+    if (scanned) return; // Prevent multiple scans
     
-    // Immediately mark as processing and scanned
-    processingRef.current = true;
     setScanned(true);
-    setScanning(false);
-    
-    // Stop the scanner immediately
-    if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
-      } catch (error) {
-        console.error("Error stopping scanner:", error);
-      }
-    }
+    await stopScanning();
 
     try {
       // Parse QR code data (expecting format: business_id)
@@ -89,8 +73,6 @@ export default function Scan() {
 
       if (!user) {
         toast.error("Please sign in to collect stamps");
-        processingRef.current = false;
-        setScanned(false);
         navigate("/auth");
         return;
       }
@@ -115,9 +97,6 @@ export default function Scan() {
 
       if (!loyaltyProgram) {
         toast.error("Business loyalty program not found");
-        processingRef.current = false;
-        setScanned(false);
-        startScanning();
         return;
       }
 
@@ -176,7 +155,6 @@ export default function Scan() {
     } catch (error: any) {
       console.error("Error processing scan:", error);
       toast.error("Failed to collect stamp. Please try again.");
-      processingRef.current = false;
       setScanned(false);
       startScanning();
     }

@@ -89,6 +89,8 @@ export default function Scan() {
 
       if (!user) {
         toast.error("Please sign in to collect stamps");
+        processingRef.current = false;
+        setScanned(false);
         navigate("/auth");
         return;
       }
@@ -113,6 +115,9 @@ export default function Scan() {
 
       if (!loyaltyProgram) {
         toast.error("Business loyalty program not found");
+        processingRef.current = false;
+        setScanned(false);
+        startScanning();
         return;
       }
 

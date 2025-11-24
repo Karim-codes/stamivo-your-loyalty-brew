@@ -64,9 +64,21 @@ export default function Scan() {
   const onScanSuccess = async (decodedText: string) => {
     if (scanned) return; // Prevent multiple scans
     
+    console.log("QR Code scanned:", decodedText);
+    
     // Immediately stop scanning and show success state
     setScanned(true);
-    await stopScanning();
+    setScanning(false);
+    
+    // Stop the scanner immediately
+    if (scannerRef.current) {
+      try {
+        await scannerRef.current.stop();
+        await scannerRef.current.clear();
+      } catch (error) {
+        console.error("Error stopping scanner:", error);
+      }
+    }
 
     try {
       // Parse QR code data (expecting format: business_id)
@@ -87,21 +99,26 @@ export default function Scan() {
         .eq('is_completed', false)
         .maybeSingle();
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error("Error fetching stamp card:", fetchError);
+        throw fetchError;
+      }
 
       // Get loyalty program details
-      const { data: loyaltyProgram } = await supabase
+      const { data: loyaltyProgram, error: programError } = await supabase
         .from('loyalty_programs')
         .select('stamps_required')
         .eq('business_id', businessId)
         .single();
 
-      if (!loyaltyProgram) {
+      if (programError || !loyaltyProgram) {
+        console.error("Error fetching loyalty program:", programError);
         toast.error("Business loyalty program not found");
-        setScanned(false);
-        startScanning();
+        setTimeout(() => navigate("/customer"), 1500);
         return;
       }
+
+      let newStampCount = 1;
 
       if (!stampCard) {
         // Create new stamp card
@@ -115,11 +132,15 @@ export default function Scan() {
           .select()
           .single();
 
-        if (createError) throw createError;
+        if (createError) {
+          console.error("Error creating stamp card:", createError);
+          throw createError;
+        }
         stampCard = newCard;
+        newStampCount = 1;
       } else {
         // Update existing stamp card
-        const newStampCount = stampCard.stamps_collected + 1;
+        newStampCount = stampCard.stamps_collected + 1;
         const isCompleted = newStampCount >= loyaltyProgram.stamps_required;
 
         const { error: updateError } = await supabase
@@ -131,7 +152,10 @@ export default function Scan() {
           })
           .eq('id', stampCard.id);
 
-        if (updateError) throw updateError;
+        if (updateError) {
+          console.error("Error updating stamp card:", updateError);
+          throw updateError;
+        }
       }
 
       // Create stamp transaction
@@ -144,24 +168,30 @@ export default function Scan() {
           status: 'verified'
         });
 
-      if (transactionError) throw transactionError;
+      if (transactionError) {
+        console.error("Error creating transaction:", transactionError);
+        throw transactionError;
+      }
+
+      console.log("Stamp collected successfully! New count:", newStampCount);
 
       // Show success with smooth animation
       toast.success("Stamp collected! ☕", {
-        description: `You now have ${stampCard.stamps_collected} stamp${stampCard.stamps_collected !== 1 ? 's' : ''}!`,
+        description: `You now have ${newStampCount} stamp${newStampCount !== 1 ? 's' : ''}!`,
         duration: 2000,
       });
 
       // Navigate back after animation
       setTimeout(() => {
-        navigate("/customer", { state: { newStamp: true } });
+        navigate("/customer", { state: { newStamp: true, stampCount: newStampCount } });
       }, 1800);
 
     } catch (error: any) {
       console.error("Error processing scan:", error);
       toast.error("Failed to collect stamp. Please try again.");
       setScanned(false);
-      startScanning();
+      // Don't restart scanning, just go back
+      setTimeout(() => navigate("/customer"), 1500);
     }
   };
 
@@ -190,7 +220,7 @@ export default function Scan() {
 
         <Card className="p-8 mb-8">
           {scanned ? (
-            <div className="aspect-square bg-success/10 rounded-lg flex items-center justify-center mb-6 border-4 border-success animate-scale-in">
+            <div className="aspect-square bg-success/10 rounded-lg flex items-center justify-center border-4 border-success animate-scale-in">
               <div className="text-center">
                 <div className="relative">
                   <CheckCircle className="w-24 h-24 mx-auto mb-4 text-success animate-scale-in" />
@@ -204,7 +234,11 @@ export default function Scan() {
             </div>
           ) : (
             <>
-              <div id={qrCodeRegionId} className="rounded-lg overflow-hidden mb-6"></div>
+              <div 
+                id={qrCodeRegionId} 
+                className="rounded-lg overflow-hidden mb-6"
+                style={{ display: scanning ? 'block' : 'none' }}
+              ></div>
               
               {!scanning && (
                 <div className="aspect-square bg-muted/30 rounded-lg flex items-center justify-center mb-6 border-4 border-dashed border-border">
@@ -215,14 +249,16 @@ export default function Scan() {
                 </div>
               )}
 
-              <div className="space-y-4">
-                <div className="flex items-center justify-center gap-4">
-                  <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
-                  <span className="text-sm text-muted-foreground">
-                    Looking for QR code...
-                  </span>
+              {scanning && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center gap-4">
+                    <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
+                    <span className="text-sm text-muted-foreground">
+                      Looking for QR code...
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
         </Card>

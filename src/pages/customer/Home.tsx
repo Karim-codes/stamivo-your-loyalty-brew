@@ -46,8 +46,10 @@ export default function CustomerHome() {
     
     // Show notification if coming from scan
     if (location.state?.newStamp) {
-      toast.success("Stamp added to your card! ☕", {
-        description: "Keep collecting to earn your reward!",
+      const stampCount = location.state?.stampCount || 0;
+      toast.success("Stamp collected! ☕", {
+        description: `You now have ${stampCount} stamp${stampCount !== 1 ? 's' : ''}!`,
+        duration: 3000,
       });
       // Clear the state
       window.history.replaceState({}, document.title);

@@ -205,21 +205,7 @@ export default function Scan() {
         return;
       }
 
-      // Get or create stamp card
-      let { data: stampCard, error: fetchError } = await supabase
-        .from('stamp_cards')
-        .select('*')
-        .eq('customer_id', user.id)
-        .eq('business_id', businessId)
-        .eq('is_completed', false)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error("Error fetching stamp card:", fetchError);
-        throw fetchError;
-      }
-
-      // Get loyalty program details
+      // Get loyalty program details first
       const { data: loyaltyProgram, error: programError } = await supabase
         .from('loyalty_programs')
         .select('stamps_required')
@@ -233,26 +219,80 @@ export default function Scan() {
         return;
       }
 
+      // Get or create stamp card with better error handling
+      let { data: stampCard, error: fetchError } = await supabase
+        .from('stamp_cards')
+        .select('*')
+        .eq('customer_id', user.id)
+        .eq('business_id', businessId)
+        .eq('is_completed', false)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error("Error fetching stamp card:", fetchError);
+        throw fetchError;
+      }
+
       let newStampCount = 1;
+      let stampCardId = '';
 
       if (!stampCard) {
-        // Create new stamp card
+        // Create new stamp card with conflict handling
         const { data: newCard, error: createError } = await supabase
           .from('stamp_cards')
           .insert({
             customer_id: user.id,
             business_id: businessId,
-            stamps_collected: 1
+            stamps_collected: 1,
+            is_completed: false
           })
           .select()
-          .single();
+          .maybeSingle();
 
         if (createError) {
-          console.error("Error creating stamp card:", createError);
-          throw createError;
+          // If duplicate key error, try to fetch the existing card again
+          if (createError.code === '23505') {
+            console.log("Card already exists, fetching again...");
+            const { data: existingCard, error: refetchError } = await supabase
+              .from('stamp_cards')
+              .select('*')
+              .eq('customer_id', user.id)
+              .eq('business_id', businessId)
+              .eq('is_completed', false)
+              .maybeSingle();
+
+            if (refetchError || !existingCard) {
+              console.error("Error refetching stamp card:", refetchError);
+              throw createError;
+            }
+
+            // Update the existing card
+            newStampCount = existingCard.stamps_collected + 1;
+            const isCompleted = newStampCount >= loyaltyProgram.stamps_required;
+
+            const { error: updateError } = await supabase
+              .from('stamp_cards')
+              .update({
+                stamps_collected: newStampCount,
+                is_completed: isCompleted,
+                completed_at: isCompleted ? new Date().toISOString() : null
+              })
+              .eq('id', existingCard.id);
+
+            if (updateError) {
+              console.error("Error updating existing stamp card:", updateError);
+              throw updateError;
+            }
+
+            stampCardId = existingCard.id;
+          } else {
+            console.error("Error creating stamp card:", createError);
+            throw createError;
+          }
+        } else if (newCard) {
+          stampCardId = newCard.id;
+          newStampCount = 1;
         }
-        stampCard = newCard;
-        newStampCount = 1;
       } else {
         // Update existing stamp card
         newStampCount = stampCard.stamps_collected + 1;
@@ -271,6 +311,8 @@ export default function Scan() {
           console.error("Error updating stamp card:", updateError);
           throw updateError;
         }
+
+        stampCardId = stampCard.id;
       }
 
       // Create stamp transaction
@@ -279,7 +321,7 @@ export default function Scan() {
         .insert({
           customer_id: user.id,
           business_id: businessId,
-          stamp_card_id: stampCard.id,
+          stamp_card_id: stampCardId,
           status: 'verified'
         });
 

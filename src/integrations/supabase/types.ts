@@ -410,6 +410,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_daily_scan_limit: {
+        Args: {
+          p_business_id: string
+          p_customer_id: string
+          p_max_scans_per_day?: number
+        }
+        Returns: boolean
+      }
+      check_weekly_scan_limit: {
+        Args: {
+          p_business_id: string
+          p_customer_id: string
+          p_max_scans_per_week?: number
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

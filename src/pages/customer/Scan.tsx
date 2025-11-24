@@ -13,12 +13,8 @@ export default function Scan() {
   const { user } = useAuth();
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const lastScanTimeRef = useRef<number>(0);
   const qrCodeRegionId = "qr-reader";
-  
-  const COOLDOWN_DURATION = 3; // 3 seconds cooldown
 
   useEffect(() => {
     startScanning();
@@ -66,33 +62,11 @@ export default function Scan() {
   };
 
   const onScanSuccess = async (decodedText: string) => {
-    // Check cooldown period
-    const now = Date.now();
-    const timeSinceLastScan = (now - lastScanTimeRef.current) / 1000;
-    
-    if (timeSinceLastScan < COOLDOWN_DURATION) {
-      const remaining = Math.ceil(COOLDOWN_DURATION - timeSinceLastScan);
-      toast.info(`Please wait ${remaining}s before scanning again`);
-      return;
-    }
-    
     if (scanned) return; // Prevent multiple scans
     
-    lastScanTimeRef.current = now;
+    // Immediately stop scanning and show success state
     setScanned(true);
     await stopScanning();
-    
-    // Start cooldown countdown
-    setCooldownSeconds(COOLDOWN_DURATION);
-    const countdownInterval = setInterval(() => {
-      setCooldownSeconds(prev => {
-        if (prev <= 1) {
-          clearInterval(countdownInterval);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
 
     try {
       // Parse QR code data (expecting format: business_id)
@@ -172,14 +146,16 @@ export default function Scan() {
 
       if (transactionError) throw transactionError;
 
+      // Show success with smooth animation
       toast.success("Stamp collected! ☕", {
-        description: "Check your rewards to see your progress"
+        description: `You now have ${stampCard.stamps_collected} stamp${stampCard.stamps_collected !== 1 ? 's' : ''}!`,
+        duration: 2000,
       });
 
-      // Navigate back to customer home after showing success
+      // Navigate back after animation
       setTimeout(() => {
-        navigate("/customer");
-      }, 2500);
+        navigate("/customer", { state: { newStamp: true } });
+      }, 1800);
 
     } catch (error: any) {
       console.error("Error processing scan:", error);
@@ -214,12 +190,15 @@ export default function Scan() {
 
         <Card className="p-8 mb-8">
           {scanned ? (
-            <div className="aspect-square bg-success/10 rounded-lg flex items-center justify-center mb-6 border-4 border-success">
+            <div className="aspect-square bg-success/10 rounded-lg flex items-center justify-center mb-6 border-4 border-success animate-scale-in">
               <div className="text-center">
-                <CheckCircle className="w-16 h-16 mx-auto mb-4 text-success" />
-                <p className="text-lg font-semibold text-success">Stamp Collected!</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Redirecting you back...
+                <div className="relative">
+                  <CheckCircle className="w-24 h-24 mx-auto mb-4 text-success animate-scale-in" />
+                  <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full bg-success/20 animate-ping" />
+                </div>
+                <p className="text-xl font-bold text-success animate-fade-in">Stamp Collected!</p>
+                <p className="text-sm text-muted-foreground mt-2 animate-fade-in">
+                  Taking you back...
                 </p>
               </div>
             </div>
@@ -237,21 +216,12 @@ export default function Scan() {
               )}
 
               <div className="space-y-4">
-                {cooldownSeconds > 0 ? (
-                  <div className="flex items-center justify-center gap-4 bg-secondary/50 p-4 rounded-lg">
-                    <div className="w-4 h-4 bg-orange-500 rounded-full" />
-                    <span className="text-sm font-medium">
-                      Cooldown: {cooldownSeconds}s
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center gap-4">
-                    <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
-                    <span className="text-sm text-muted-foreground">
-                      Looking for QR code...
-                    </span>
-                  </div>
-                )}
+                <div className="flex items-center justify-center gap-4">
+                  <div className="w-4 h-4 bg-primary rounded-full animate-pulse" />
+                  <span className="text-sm text-muted-foreground">
+                    Looking for QR code...
+                  </span>
+                </div>
               </div>
             </>
           )}

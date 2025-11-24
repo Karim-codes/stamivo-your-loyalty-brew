@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { QrCode, ArrowRight, Gift, Coffee, User, LogOut } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -34,6 +34,7 @@ interface StampCard {
 
 export default function CustomerHome() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signOut } = useAuth();
   const [stampCards, setStampCards] = useState<StampCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,7 +43,16 @@ export default function CustomerHome() {
     if (user) {
       fetchStampCards();
     }
-  }, [user]);
+    
+    // Show notification if coming from scan
+    if (location.state?.newStamp) {
+      toast.success("Stamp added to your card! ☕", {
+        description: "Keep collecting to earn your reward!",
+      });
+      // Clear the state
+      window.history.replaceState({}, document.title);
+    }
+  }, [user, location.state]);
 
   const handleSignOut = async () => {
     await signOut();

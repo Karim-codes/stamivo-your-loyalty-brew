@@ -14,9 +14,11 @@ import Auth from "./pages/Auth";
 import CustomerHome from "./pages/customer/Home";
 import Scan from "./pages/customer/Scan";
 import Rewards from "./pages/customer/Rewards";
+import Redeem from "./pages/customer/Redeem";
 import Onboarding from "./pages/business/Onboarding";
 import Dashboard from "./pages/business/Dashboard";
 import QRCodePage from "./pages/business/QRCode";
+import VerifyRedemption from "./pages/business/VerifyRedemption";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +52,11 @@ const App = () => (
                 <Rewards />
               </ProtectedRoute>
             } />
+            <Route path="/customer/redeem" element={
+              <ProtectedRoute requiredRole="customer">
+                <Redeem />
+              </ProtectedRoute>
+            } />
             <Route path="/business/onboarding" element={<Onboarding />} />
             <Route path="/business/dashboard" element={
               <ProtectedRoute requiredRole="business">
@@ -59,6 +66,11 @@ const App = () => (
             <Route path="/business/qr-code" element={
               <ProtectedRoute requiredRole="business">
                 <QRCodePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/business/verify" element={
+              <ProtectedRoute requiredRole="business">
+                <VerifyRedemption />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

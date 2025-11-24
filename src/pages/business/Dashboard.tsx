@@ -119,15 +119,21 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex justify-between items-start">
+        <div className="mb-8 flex justify-between items-start flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold mb-2">Business Dashboard</h1>
             <p className="text-muted-foreground">Welcome back!</p>
           </div>
-          <Button onClick={() => navigate("/business/qr-code")} className="flex items-center gap-2">
-            <QrCode className="w-4 h-4" />
-            View QR Code
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate("/business/verify")} variant="outline" className="flex items-center gap-2">
+              <Gift className="w-4 h-4" />
+              Verify Rewards
+            </Button>
+            <Button onClick={() => navigate("/business/qr-code")} className="flex items-center gap-2">
+              <QrCode className="w-4 h-4" />
+              View QR Code
+            </Button>
+          </div>
         </div>
 
         {loading ? (

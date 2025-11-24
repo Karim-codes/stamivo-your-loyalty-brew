@@ -164,6 +164,18 @@ export default function CustomerHome() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+
+        {/* Redeem Button */}
+        {stampCards.some(card => card.is_completed) && (
+          <Button 
+            onClick={() => navigate("/customer/redeem")}
+            variant="secondary"
+            className="w-full mt-4"
+          >
+            <Gift className="mr-2 w-4 h-4" />
+            Redeem Rewards
+          </Button>
+        )}
       </div>
 
       {/* Shops */}

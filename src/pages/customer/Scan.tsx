@@ -297,19 +297,26 @@ export default function Scan() {
         stampCardId = stampCard.id;
       }
 
-      // Create stamp transaction
-      const { error: transactionError } = await supabase
+      // Create stamp transaction - this is critical for tracking
+      console.log("Creating transaction with:", { customer_id: user.id, business_id: businessId, stamp_card_id: stampCardId });
+      
+      const { data: transactionData, error: transactionError } = await supabase
         .from('stamp_transactions')
         .insert({
           customer_id: user.id,
           business_id: businessId,
           stamp_card_id: stampCardId,
           status: 'verified'
-        });
+        })
+        .select()
+        .single();
 
       if (transactionError) {
         console.error("Error creating transaction:", transactionError);
-        throw transactionError;
+        toast.error("Stamp collected but transaction failed to record");
+        // Don't throw - we already updated the card
+      } else {
+        console.log("Transaction created successfully:", transactionData);
       }
 
       console.log("Stamp collected successfully! New count:", newStampCount);

@@ -15,6 +15,7 @@ import CustomerHome from "./pages/customer/Home";
 import Scan from "./pages/customer/Scan";
 import Rewards from "./pages/customer/Rewards";
 import Redeem from "./pages/customer/Redeem";
+import History from "./pages/customer/History";
 import Onboarding from "./pages/business/Onboarding";
 import Dashboard from "./pages/business/Dashboard";
 import QRCodePage from "./pages/business/QRCode";
@@ -56,6 +57,11 @@ const App = () => (
             <Route path="/customer/redeem" element={
               <ProtectedRoute requiredRole="customer">
                 <Redeem />
+              </ProtectedRoute>
+            } />
+            <Route path="/customer/history" element={
+              <ProtectedRoute requiredRole="customer">
+                <History />
               </ProtectedRoute>
             } />
             <Route path="/business/onboarding" element={<Onboarding />} />

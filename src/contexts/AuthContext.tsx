@@ -53,20 +53,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    if (!error && data.user) {
-      // Assign role after signup
-      setTimeout(async () => {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({ user_id: data.user.id, role: role });
-        
-        if (roleError) {
-          console.error('Error assigning role:', roleError);
-        }
-      }, 0);
-    }
-
-    return { error };
+    // Role is now automatically assigned by database trigger
+    return { error, data };
   };
 
   const signIn = async (email: string, password: string) => {

@@ -25,11 +25,13 @@ export default function Auth() {
       const { error } = await signUp(email, password, 'customer');
       if (error) {
         toast.error(error.message);
+        setLoading(false);
       } else {
         toast.success("Account created! Please check your email to verify.");
         // Wait a bit for role to be assigned
         setTimeout(() => {
           navigate("/customer");
+          setLoading(false);
         }, 500);
       }
     } else {
@@ -42,32 +44,33 @@ export default function Auth() {
       
       toast.success("Welcome back!");
       
-      // Try to get user role and redirect accordingly
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (roleData?.role === 'business') {
-            navigate("/business/dashboard");
+      // Wait for auth state to update before checking role and redirecting
+      setTimeout(async () => {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: roleData } = await supabase
+              .from('user_roles')
+              .select('role')
+              .eq('user_id', user.id)
+              .maybeSingle();
+            
+            if (roleData?.role === 'business') {
+              navigate("/business/dashboard");
+            } else {
+              // Default to customer
+              navigate("/customer");
+            }
           } else {
-            // Default to customer
             navigate("/customer");
           }
-        } else {
+        } catch (err) {
+          console.error('Error checking role:', err);
           navigate("/customer");
         }
-      } catch (err) {
-        console.error('Error checking role:', err);
-        navigate("/customer");
-      }
+        setLoading(false);
+      }, 500);
     }
-
-    setLoading(false);
   };
 
   return (

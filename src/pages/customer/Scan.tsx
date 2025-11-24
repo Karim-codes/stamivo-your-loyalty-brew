@@ -237,63 +237,45 @@ export default function Scan() {
       let stampCardId = '';
 
       if (!stampCard) {
-        // Create new stamp card with conflict handling
-        const { data: newCard, error: createError } = await supabase
+        // Create new stamp card - first check one more time if it exists
+        const { data: doubleCheck } = await supabase
           .from('stamp_cards')
-          .insert({
-            customer_id: user.id,
-            business_id: businessId,
-            stamps_collected: 1,
-            is_completed: false
-          })
-          .select()
+          .select('*')
+          .eq('customer_id', user.id)
+          .eq('business_id', businessId)
+          .eq('is_completed', false)
           .maybeSingle();
 
-        if (createError) {
-          // If duplicate key error, try to fetch the existing card again
-          if (createError.code === '23505') {
-            console.log("Card already exists, fetching again...");
-            const { data: existingCard, error: refetchError } = await supabase
-              .from('stamp_cards')
-              .select('*')
-              .eq('customer_id', user.id)
-              .eq('business_id', businessId)
-              .eq('is_completed', false)
-              .maybeSingle();
+        if (doubleCheck) {
+          // Card exists, use it
+          stampCard = doubleCheck;
+        } else {
+          // Try to create new card
+          const { data: newCard, error: createError } = await supabase
+            .from('stamp_cards')
+            .insert({
+              customer_id: user.id,
+              business_id: businessId,
+              stamps_collected: 1,
+              is_completed: false
+            })
+            .select()
+            .single();
 
-            if (refetchError || !existingCard) {
-              console.error("Error refetching stamp card:", refetchError);
-              throw createError;
-            }
-
-            // Update the existing card
-            newStampCount = existingCard.stamps_collected + 1;
-            const isCompleted = newStampCount >= loyaltyProgram.stamps_required;
-
-            const { error: updateError } = await supabase
-              .from('stamp_cards')
-              .update({
-                stamps_collected: newStampCount,
-                is_completed: isCompleted,
-                completed_at: isCompleted ? new Date().toISOString() : null
-              })
-              .eq('id', existingCard.id);
-
-            if (updateError) {
-              console.error("Error updating existing stamp card:", updateError);
-              throw updateError;
-            }
-
-            stampCardId = existingCard.id;
-          } else {
+          if (createError) {
             console.error("Error creating stamp card:", createError);
-            throw createError;
+            toast.error("Failed to create stamp card. Please try again.");
+            setTimeout(() => navigate("/customer"), 1500);
+            return;
           }
-        } else if (newCard) {
+
           stampCardId = newCard.id;
           newStampCount = 1;
         }
-      } else {
+      }
+
+      // If we have an existing card, update it
+      if (stampCard) {
         // Update existing stamp card
         newStampCount = stampCard.stamps_collected + 1;
         const isCompleted = newStampCount >= loyaltyProgram.stamps_required;

@@ -125,6 +125,10 @@ export default function Dashboard() {
             <p className="text-muted-foreground">Welcome back!</p>
           </div>
           <div className="flex gap-2">
+            <Button onClick={() => navigate("/business/analytics")} variant="outline" className="flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              Analytics
+            </Button>
             <Button onClick={() => navigate("/business/verify")} variant="outline" className="flex items-center gap-2">
               <Gift className="w-4 h-4" />
               Verify Rewards

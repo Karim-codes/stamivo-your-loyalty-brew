@@ -19,6 +19,7 @@ import Onboarding from "./pages/business/Onboarding";
 import Dashboard from "./pages/business/Dashboard";
 import QRCodePage from "./pages/business/QRCode";
 import VerifyRedemption from "./pages/business/VerifyRedemption";
+import Analytics from "./pages/business/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -71,6 +72,11 @@ const App = () => (
             <Route path="/business/verify" element={
               <ProtectedRoute requiredRole="business">
                 <VerifyRedemption />
+              </ProtectedRoute>
+            } />
+            <Route path="/business/analytics" element={
+              <ProtectedRoute requiredRole="business">
+                <Analytics />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

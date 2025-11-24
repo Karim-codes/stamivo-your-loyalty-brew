@@ -44,9 +44,13 @@ export default function Scan() {
   };
 
   useEffect(() => {
-    startScanning();
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      startScanning();
+    }, 100);
 
     return () => {
+      clearTimeout(timer);
       stopScanning();
     };
   }, []);
@@ -54,24 +58,44 @@ export default function Scan() {
   const startScanning = async () => {
     try {
       setError(null);
+      console.log("Starting scanner initialization...");
       
-      // Create new scanner instance
+      // Make sure element exists
+      const element = document.getElementById(qrCodeRegionId);
+      if (!element) {
+        console.error("QR reader element not found");
+        setError("Scanner element not ready");
+        return;
+      }
+      
+      // Clear any existing scanner
       if (scannerRef.current) {
         try {
+          const state = await scannerRef.current.getState();
+          if (state === 2) {
+            await scannerRef.current.stop();
+          }
           await scannerRef.current.clear();
+          scannerRef.current = null;
         } catch (e) {
-          console.log("Scanner already cleared");
+          console.log("Error clearing previous scanner:", e);
         }
       }
       
+      // Wait a bit before creating new scanner
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log("Creating new Html5Qrcode instance...");
       scannerRef.current = new Html5Qrcode(qrCodeRegionId);
 
       const config = {
         fps: 10,
         qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
+        aspectRatio: 1.0,
+        disableFlip: false
       };
 
+      console.log("Starting camera...");
       await scannerRef.current.start(
         { facingMode: "environment" },
         config,
@@ -80,7 +104,7 @@ export default function Scan() {
       );
       
       setScanning(true);
-      console.log("Scanner started successfully");
+      console.log("Scanner started successfully!");
     } catch (error: any) {
       console.error("Error starting scanner:", error);
       const errorMessage = error?.message || "Failed to start camera";
@@ -88,6 +112,8 @@ export default function Scan() {
       
       if (errorMessage.includes("NotAllowedError") || errorMessage.includes("permission")) {
         toast.error("Camera permission denied. Please allow camera access in your browser settings.");
+      } else if (errorMessage.includes("NotFoundError")) {
+        toast.error("No camera found on this device.");
       } else {
         toast.error("Failed to start camera. Please try again.");
       }
@@ -340,15 +366,15 @@ export default function Scan() {
             <>
               <div 
                 id={qrCodeRegionId} 
-                className="rounded-lg overflow-hidden mb-6"
+                className="rounded-lg overflow-hidden mb-6 w-full"
                 style={{ 
-                  display: scanning ? 'block' : 'none',
-                  minHeight: '300px'
+                  minHeight: '300px',
+                  width: '100%'
                 }}
               ></div>
               
-              {!scanning && (
-                <div className="aspect-square bg-muted/30 rounded-lg flex items-center justify-center mb-6 border-4 border-dashed border-border">
+              {!scanning && !error && (
+                <div className="absolute inset-0 bg-muted/30 rounded-lg flex items-center justify-center border-4 border-dashed border-border">
                   <div className="text-center">
                     <Camera className="w-16 h-16 mx-auto mb-4 text-muted-foreground animate-pulse" />
                     <p className="text-muted-foreground">Initializing camera...</p>

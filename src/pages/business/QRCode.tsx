@@ -23,17 +23,17 @@ export default function QRCodePage() {
     try {
       if (!user) return;
 
-      const { data: business, error } = await supabase
+      const { data: businesses, error } = await supabase
         .from('businesses')
         .select('id, business_name')
         .eq('owner_id', user.id)
-        .single();
+        .limit(1);
 
       if (error) throw error;
 
-      if (business) {
-        setBusinessId(business.id);
-        setBusinessName(business.business_name);
+      if (businesses && businesses.length > 0) {
+        setBusinessId(businesses[0].id);
+        setBusinessName(businesses[0].business_name);
       }
     } catch (error: any) {
       console.error('Error fetching business info:', error);

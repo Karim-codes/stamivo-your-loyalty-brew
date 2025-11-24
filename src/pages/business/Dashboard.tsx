@@ -35,17 +35,19 @@ export default function Dashboard() {
     try {
       if (!user) return;
 
-      // Get business ID for the current user
-      const { data: business } = await supabase
+      // Get business ID for the current user (get first business if multiple exist)
+      const { data: businesses } = await supabase
         .from('businesses')
         .select('id')
         .eq('owner_id', user.id)
-        .single();
+        .limit(1);
 
-      if (!business) {
+      if (!businesses || businesses.length === 0) {
         toast.error("Business not found");
         return;
       }
+
+      const business = businesses[0];
 
       // Get total unique customers
       const { data: customers, error: customersError } = await supabase

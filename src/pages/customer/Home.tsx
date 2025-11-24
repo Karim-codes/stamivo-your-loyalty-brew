@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { QrCode, ArrowRight, Gift, Coffee, User, LogOut } from "lucide-react";
+import { QrCode, ArrowRight, Gift, Coffee, User, LogOut, Clock } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -157,6 +157,10 @@ export default function CustomerHome() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/customer/history")} className="cursor-pointer">
+                <Clock className="mr-2 w-4 h-4" />
+                View History
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
                 <LogOut className="mr-2 w-4 h-4" />
                 Sign Out

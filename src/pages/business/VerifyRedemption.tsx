@@ -3,12 +3,20 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle2, XCircle, Search, Gift, AlertCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Search, Gift, AlertCircle, PartyPopper } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface RedemptionDetails {
   id: string;
@@ -37,6 +45,7 @@ export default function VerifyRedemption() {
   const [verifying, setVerifying] = useState(false);
   const [redemption, setRedemption] = useState<RedemptionDetails | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const searchCode = async () => {
     if (!user || !code.trim()) return;
@@ -158,13 +167,8 @@ export default function VerifyRedemption() {
         navigator.vibrate([200, 100, 200]);
       }
 
-      toast.success("Reward redeemed successfully!", {
-        description: "The customer's reward has been verified and redeemed."
-      });
-
-      // Reset form
-      setCode("");
-      setRedemption(null);
+      // Show success dialog
+      setShowSuccessDialog(true);
     } catch (error: any) {
       console.error("Error verifying redemption:", error);
       toast.error("Failed to verify redemption");
@@ -333,6 +337,40 @@ export default function VerifyRedemption() {
           </p>
         </Card>
       </div>
+
+      {/* Success Dialog */}
+      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader className="text-center">
+            <div className="mx-auto mb-4 w-16 h-16 bg-success/20 rounded-full flex items-center justify-center">
+              <PartyPopper className="w-10 h-10 text-success" />
+            </div>
+            <AlertDialogTitle className="text-2xl text-center">
+              Reward Redeemed Successfully!
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-center text-base">
+              The customer's reward has been verified and redeemed.
+              <br />
+              <span className="text-success font-medium">
+                Customer has been notified
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button 
+              onClick={() => {
+                setShowSuccessDialog(false);
+                setCode("");
+                setRedemption(null);
+              }}
+              className="w-full"
+              size="lg"
+            >
+              Done
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

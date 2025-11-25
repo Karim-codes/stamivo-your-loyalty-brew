@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ConfettiEffect } from "@/components/ConfettiEffect";
 
 interface StampCard {
   id: string;
@@ -50,6 +51,7 @@ export default function CustomerHome() {
   const [stampCards, setStampCards] = useState<StampCard[]>([]);
   const [groupedCards, setGroupedCards] = useState<GroupedStampCards[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -59,10 +61,24 @@ export default function CustomerHome() {
     // Show notification if coming from scan
     if (location.state?.newStamp) {
       const stampCount = location.state?.stampCount || 0;
-      toast.success("Stamp collected! ☕", {
-        description: `You now have ${stampCount} stamp${stampCount !== 1 ? 's' : ''}!`,
-        duration: 3000,
-      });
+      const isCompleted = location.state?.isCompleted || false;
+      
+      if (isCompleted) {
+        // Trigger confetti for completed card
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
+        
+        toast.success("🎉 Stamp card completed!", {
+          description: "You've earned a reward! Check the Redeem page.",
+          duration: 5000,
+        });
+      } else {
+        toast.success("Stamp collected! ☕", {
+          description: `You now have ${stampCount} stamp${stampCount !== 1 ? 's' : ''}!`,
+          duration: 3000,
+        });
+      }
+      
       // Clear the state
       window.history.replaceState({}, document.title);
     }
@@ -163,6 +179,9 @@ export default function CustomerHome() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 pb-20">
+      {/* Confetti Effect */}
+      <ConfettiEffect trigger={showConfetti} />
+      
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-6 rounded-b-3xl shadow-lg">
         <div className="flex justify-between items-start mb-2">
@@ -219,74 +238,79 @@ export default function CustomerHome() {
         )}
       </div>
 
-      {/* Shops */}
-      <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Shops - Desktop Grid Layout */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         {groupedCards.length === 0 ? (
-          <Card className="p-8 text-center space-y-4">
-            <Coffee className="w-16 h-16 mx-auto text-muted-foreground" />
-            <div>
-              <h3 className="text-xl font-bold mb-2">No stamp cards yet</h3>
-              <p className="text-muted-foreground">
-                Scan a QR code at a coffee shop to start collecting stamps!
-              </p>
-            </div>
-            <Button onClick={() => navigate("/customer/scan")} size="lg">
-              <QrCode className="mr-2 w-5 h-5" />
-              Scan QR Code
-            </Button>
-          </Card>
+          <div className="lg:col-span-2 xl:col-span-3">
+            <Card className="p-8 text-center space-y-4">
+              <Coffee className="w-16 h-16 mx-auto text-muted-foreground" />
+              <div>
+                <h3 className="text-xl font-bold mb-2">No stamp cards yet</h3>
+                <p className="text-muted-foreground">
+                  Scan a QR code at a coffee shop to start collecting stamps!
+                </p>
+              </div>
+              <Button onClick={() => navigate("/customer/scan")} size="lg">
+                <QrCode className="mr-2 w-5 h-5" />
+                Scan QR Code
+              </Button>
+            </Card>
+          </div>
         ) : (
           groupedCards.map((group) => (
-            <Card key={group.business.id} className="overflow-hidden">
+            <Card key={group.business.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
               {/* Business Header */}
               <div 
-                className="p-4 bg-gradient-to-r from-primary/5 to-primary/10 cursor-pointer hover:from-primary/10 hover:to-primary/15 transition-colors"
+                className="p-5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent cursor-pointer hover:from-primary/15 hover:via-primary/10 transition-all duration-300"
                 onClick={() => navigate("/customer/rewards")}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   {group.business.logo_url ? (
                     <img
                       src={group.business.logo_url}
                       alt={group.business.business_name}
-                      className="w-14 h-14 rounded-full object-cover border-2 border-primary/20"
+                      className="w-16 h-16 rounded-full object-cover border-3 border-primary/30 shadow-lg"
                     />
                   ) : (
-                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
-                      <Coffee className="w-7 h-7 text-primary" />
+                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center border-3 border-primary/30 shadow-lg">
+                      <Coffee className="w-8 h-8 text-white" />
                     </div>
                   )}
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold">{group.business.business_name}</h3>
-                    <p className="text-xs text-muted-foreground">{group.business.address}</p>
+                    <h3 className="text-xl font-bold mb-0.5">{group.business.business_name}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-1">{group.business.address}</p>
                   </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground" />
+                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
 
               {/* Stamp Cards for this Business */}
-              <div className="divide-y">
+              <div className="divide-y flex-1 flex flex-col">
                 {group.cards.map((card) => {
                   const isInactive = card.is_completed || card.has_redeemed_reward;
+                  const isCompleted = card.is_completed && !card.has_redeemed_reward;
+                  
                   return (
                     <div 
                       key={card.id}
-                      className={`p-4 transition-all ${
+                      className={`p-5 transition-all flex-1 ${
                         isInactive 
-                          ? 'opacity-50 bg-muted/30' 
-                          : 'hover:bg-accent/5'
-                      }`}
+                          ? 'opacity-60 bg-muted/20' 
+                          : 'hover:bg-gradient-to-r hover:from-accent/5 hover:to-transparent'
+                      } ${isCompleted ? 'animate-pulse' : ''}`}
                     >
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-sm font-medium text-muted-foreground">
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-sm font-semibold text-foreground">
                           {card.stamps_collected} / {card.loyalty_program.stamps_required} stamps
                         </p>
                         {card.has_redeemed_reward && (
-                          <span className="text-xs bg-secondary text-secondary-foreground px-3 py-1 rounded-full font-medium">
+                          <span className="text-xs bg-muted text-muted-foreground px-3 py-1.5 rounded-full font-medium border border-border">
                             ✓ Redeemed
                           </span>
                         )}
-                        {card.is_completed && !card.has_redeemed_reward && (
-                          <span className="text-xs bg-success text-success-foreground px-3 py-1 rounded-full font-medium">
+                        {isCompleted && (
+                          <span className="text-xs bg-gradient-to-r from-success to-success/80 text-white px-4 py-1.5 rounded-full font-bold shadow-lg animate-bounce">
                             🎉 Ready!
                           </span>
                         )}
@@ -294,34 +318,42 @@ export default function CustomerHome() {
 
                       <Progress
                         value={(card.stamps_collected / card.loyalty_program.stamps_required) * 100}
-                        className="h-2 mb-3"
+                        className={`h-2.5 mb-4 ${isCompleted ? 'animate-pulse' : ''}`}
                       />
 
                       {/* Stamp visualization */}
-                      <div className="flex gap-2 mb-3 flex-wrap">
-                        {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-base transition-all ${
-                              i < card.stamps_collected
-                                ? isInactive 
-                                  ? "bg-muted border-muted-foreground/20 text-muted-foreground"
-                                  : "bg-primary border-primary text-primary-foreground"
-                                : "border-muted-foreground/20 text-muted-foreground/30"
-                            }`}
-                          >
-                            {i < card.stamps_collected ? "☕" : ""}
-                          </div>
-                        ))}
+                      <div className="flex gap-2.5 mb-4 flex-wrap justify-center">
+                        {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => {
+                          const isCollected = i < card.stamps_collected;
+                          const justCompleted = isCompleted && i === card.stamps_collected - 1;
+                          
+                          return (
+                            <div
+                              key={i}
+                              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-lg font-bold transition-all duration-500 ${
+                                isCollected
+                                  ? isInactive 
+                                    ? "bg-muted border-muted-foreground/30 text-muted-foreground scale-95"
+                                    : "bg-gradient-to-br from-primary to-primary/80 border-primary/50 text-white shadow-lg scale-105"
+                                  : "border-muted-foreground/20 text-muted-foreground/30 scale-90"
+                              } ${justCompleted ? 'animate-bounce' : ''} ${isCollected && !isInactive ? 'hover:scale-110' : ''}`}
+                              style={{
+                                animationDelay: `${i * 0.1}s`
+                              }}
+                            >
+                              {isCollected ? "☕" : ""}
+                            </div>
+                          );
+                        })}
                       </div>
 
-                      <div className={`flex items-center gap-2 text-sm p-2.5 rounded-lg ${
+                      <div className={`flex items-center gap-2.5 text-sm p-3 rounded-xl transition-all ${
                         isInactive 
                           ? 'bg-muted/50 text-muted-foreground' 
-                          : 'bg-success/10 text-success'
+                          : 'bg-gradient-to-r from-success/15 to-success/5 text-success border border-success/20'
                       }`}>
-                        <Gift className="w-4 h-4" />
-                        <span className="font-medium">{card.loyalty_program.reward_description}</span>
+                        <Gift className={`w-5 h-5 ${isCompleted ? 'animate-bounce' : ''}`} />
+                        <span className="font-semibold">{card.loyalty_program.reward_description}</span>
                       </div>
                     </div>
                   );
@@ -330,6 +362,7 @@ export default function CustomerHome() {
             </Card>
           ))
         )}
+        </div>
       </div>
 
       {/* Floating Scan Button */}

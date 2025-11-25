@@ -295,47 +295,62 @@ export default function Scan() {
         }
 
         stampCardId = stampCard.id;
+        
+        // Store completion status for navigation
+        const cardCompleted = isCompleted;
+        
+        // Create stamp transaction - this is critical for tracking
+        console.log("Creating transaction with:", { customer_id: user.id, business_id: businessId, stamp_card_id: stampCardId });
+        
+        const { data: transactionData, error: transactionError } = await supabase
+          .from('stamp_transactions')
+          .insert({
+            customer_id: user.id,
+            business_id: businessId,
+            stamp_card_id: stampCardId,
+            status: 'verified'
+          })
+          .select()
+          .single();
+
+        if (transactionError) {
+          console.error("Error creating transaction:", transactionError);
+          toast.error("Stamp collected but transaction failed to record");
+          // Don't throw - we already updated the card
+        } else {
+          console.log("Transaction created successfully:", transactionData);
+        }
+
+        console.log("Stamp collected successfully! New count:", newStampCount);
+
+        // Trigger haptic feedback and sound
+        triggerHapticFeedback();
+        playSuccessSound();
+
+        // Show success with smooth animation
+        if (cardCompleted) {
+          toast.success("🎉 Stamp card completed!", {
+            description: "You've earned a reward! Check the Redeem page.",
+            duration: 2500,
+          });
+        } else {
+          toast.success("Stamp collected! ☕", {
+            description: `You now have ${newStampCount} stamp${newStampCount !== 1 ? 's' : ''}!`,
+            duration: 2000,
+          });
+        }
+
+        // Navigate back after animation
+        setTimeout(() => {
+          navigate("/customer", { 
+            state: { 
+              newStamp: true, 
+              stampCount: newStampCount,
+              isCompleted: cardCompleted
+            } 
+          });
+        }, 1800);
       }
-
-      // Create stamp transaction - this is critical for tracking
-      console.log("Creating transaction with:", { customer_id: user.id, business_id: businessId, stamp_card_id: stampCardId });
-      
-      const { data: transactionData, error: transactionError } = await supabase
-        .from('stamp_transactions')
-        .insert({
-          customer_id: user.id,
-          business_id: businessId,
-          stamp_card_id: stampCardId,
-          status: 'verified'
-        })
-        .select()
-        .single();
-
-      if (transactionError) {
-        console.error("Error creating transaction:", transactionError);
-        toast.error("Stamp collected but transaction failed to record");
-        // Don't throw - we already updated the card
-      } else {
-        console.log("Transaction created successfully:", transactionData);
-      }
-
-      console.log("Stamp collected successfully! New count:", newStampCount);
-
-      // Trigger haptic feedback and sound
-      triggerHapticFeedback();
-      playSuccessSound();
-
-      // Show success with smooth animation
-      toast.success("Stamp collected! ☕", {
-        description: `You now have ${newStampCount} stamp${newStampCount !== 1 ? 's' : ''}!`,
-        duration: 2000,
-      });
-
-      // Navigate back after animation
-      setTimeout(() => {
-        navigate("/customer", { state: { newStamp: true, stampCount: newStampCount } });
-      }, 1800);
-
     } catch (error: any) {
       console.error("Error processing scan:", error);
       toast.error("Failed to collect stamp. Please try again.");

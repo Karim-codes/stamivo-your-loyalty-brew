@@ -33,11 +33,22 @@ interface StampCard {
   };
 }
 
+interface GroupedStampCards {
+  business: {
+    id: string;
+    business_name: string;
+    address: string;
+    logo_url: string | null;
+  };
+  cards: StampCard[];
+}
+
 export default function CustomerHome() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [stampCards, setStampCards] = useState<StampCard[]>([]);
+  const [groupedCards, setGroupedCards] = useState<GroupedStampCards[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -115,6 +126,22 @@ export default function CustomerHome() {
       );
 
       setStampCards(cardsWithPrograms);
+
+      // Group cards by business
+      const grouped = cardsWithPrograms.reduce((acc: GroupedStampCards[], card) => {
+        const existingGroup = acc.find(g => g.business.id === card.business.id);
+        if (existingGroup) {
+          existingGroup.cards.push(card);
+        } else {
+          acc.push({
+            business: card.business,
+            cards: [card]
+          });
+        }
+        return acc;
+      }, []);
+
+      setGroupedCards(grouped);
     } catch (error: any) {
       console.error('Error fetching stamp cards:', error);
       toast.error("Failed to load your stamp cards");
@@ -193,8 +220,8 @@ export default function CustomerHome() {
       </div>
 
       {/* Shops */}
-      <div className="container mx-auto px-4 py-6 space-y-4">
-        {stampCards.length === 0 ? (
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {groupedCards.length === 0 ? (
           <Card className="p-8 text-center space-y-4">
             <Coffee className="w-16 h-16 mx-auto text-muted-foreground" />
             <div>
@@ -209,77 +236,97 @@ export default function CustomerHome() {
             </Button>
           </Card>
         ) : (
-          stampCards.map((card) => (
-            <Card
-              key={card.id}
-              className="p-6 hover:shadow-lg transition-all cursor-pointer"
-              onClick={() => navigate("/customer/rewards")}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex gap-3 items-start">
-                  {card.business.logo_url ? (
+          groupedCards.map((group) => (
+            <Card key={group.business.id} className="overflow-hidden">
+              {/* Business Header */}
+              <div 
+                className="p-4 bg-gradient-to-r from-primary/5 to-primary/10 cursor-pointer hover:from-primary/10 hover:to-primary/15 transition-colors"
+                onClick={() => navigate("/customer/rewards")}
+              >
+                <div className="flex items-center gap-3">
+                  {group.business.logo_url ? (
                     <img
-                      src={card.business.logo_url}
-                      alt={card.business.business_name}
-                      className="w-12 h-12 rounded-full object-cover"
+                      src={group.business.logo_url}
+                      alt={group.business.business_name}
+                      className="w-14 h-14 rounded-full object-cover border-2 border-primary/20"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Coffee className="w-6 h-6 text-primary" />
+                    <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                      <Coffee className="w-7 h-7 text-primary" />
                     </div>
                   )}
-                  <div>
-                    <h3 className="text-xl font-bold mb-1">{card.business.business_name}</h3>
-                    <p className="text-xs text-muted-foreground">{card.business.address}</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {card.stamps_collected} / {card.loyalty_program.stamps_required} stamps
-                    </p>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold">{group.business.business_name}</h3>
+                    <p className="text-xs text-muted-foreground">{group.business.address}</p>
                   </div>
+                  <ArrowRight className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground" />
               </div>
 
-              <Progress
-                value={(card.stamps_collected / card.loyalty_program.stamps_required) * 100}
-                className="h-3 mb-4"
-              />
+              {/* Stamp Cards for this Business */}
+              <div className="divide-y">
+                {group.cards.map((card) => {
+                  const isInactive = card.is_completed || card.has_redeemed_reward;
+                  return (
+                    <div 
+                      key={card.id}
+                      className={`p-4 transition-all ${
+                        isInactive 
+                          ? 'opacity-50 bg-muted/30' 
+                          : 'hover:bg-accent/5'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-medium text-muted-foreground">
+                          {card.stamps_collected} / {card.loyalty_program.stamps_required} stamps
+                        </p>
+                        {card.has_redeemed_reward && (
+                          <span className="text-xs bg-secondary text-secondary-foreground px-3 py-1 rounded-full font-medium">
+                            ✓ Redeemed
+                          </span>
+                        )}
+                        {card.is_completed && !card.has_redeemed_reward && (
+                          <span className="text-xs bg-success text-success-foreground px-3 py-1 rounded-full font-medium">
+                            🎉 Ready!
+                          </span>
+                        )}
+                      </div>
 
-              {/* Stamp visualization */}
-              <div className="flex gap-2 mb-4 flex-wrap">
-                {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-lg transition-all ${
-                      i < card.stamps_collected
-                        ? "bg-primary border-primary text-primary-foreground animate-in zoom-in"
-                        : "border-muted text-muted"
-                    }`}
-                  >
-                    {i < card.stamps_collected ? "☕" : ""}
-                  </div>
-                ))}
+                      <Progress
+                        value={(card.stamps_collected / card.loyalty_program.stamps_required) * 100}
+                        className="h-2 mb-3"
+                      />
+
+                      {/* Stamp visualization */}
+                      <div className="flex gap-2 mb-3 flex-wrap">
+                        {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-10 h-10 rounded-full border-2 flex items-center justify-center text-base transition-all ${
+                              i < card.stamps_collected
+                                ? isInactive 
+                                  ? "bg-muted border-muted-foreground/20 text-muted-foreground"
+                                  : "bg-primary border-primary text-primary-foreground"
+                                : "border-muted-foreground/20 text-muted-foreground/30"
+                            }`}
+                          >
+                            {i < card.stamps_collected ? "☕" : ""}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className={`flex items-center gap-2 text-sm p-2.5 rounded-lg ${
+                        isInactive 
+                          ? 'bg-muted/50 text-muted-foreground' 
+                          : 'bg-success/10 text-success'
+                      }`}>
+                        <Gift className="w-4 h-4" />
+                        <span className="font-medium">{card.loyalty_program.reward_description}</span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-
-              <div className="flex items-center gap-2 text-sm bg-success/10 text-success p-3 rounded-lg">
-                <Gift className="w-4 h-4" />
-                <span className="font-medium">{card.loyalty_program.reward_description}</span>
-              </div>
-
-              {card.is_completed && !card.has_redeemed_reward && (
-                <div className="mt-3 text-center">
-                  <span className="inline-block bg-success text-success-foreground px-4 py-2 rounded-full text-sm font-medium">
-                    🎉 Ready to redeem!
-                  </span>
-                </div>
-              )}
-              
-              {card.has_redeemed_reward && (
-                <div className="mt-3 text-center">
-                  <span className="inline-block bg-secondary text-secondary-foreground px-4 py-2 rounded-full text-sm font-medium">
-                    ✓ Reward Redeemed
-                  </span>
-                </div>
-              )}
             </Card>
           ))
         )}

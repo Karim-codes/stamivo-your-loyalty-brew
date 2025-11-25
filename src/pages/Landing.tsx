@@ -58,6 +58,13 @@ export default function Landing() {
                 About
               </a>
               <Button
+                variant="ghost"
+                onClick={() => window.location.href = '/auth'}
+                className="hidden sm:inline-flex hover:text-primary transition-colors"
+              >
+                Sign In
+              </Button>
+              <Button
                 onClick={() => setShowModal(true)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
               >

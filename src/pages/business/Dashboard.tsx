@@ -1,17 +1,26 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Coffee, Gift, TrendingUp, QrCode } from "lucide-react";
+import { Users, Coffee, Gift, TrendingUp, QrCode, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 interface DashboardStats {
   totalCustomers: number;
   stampsGiven: number;
   rewardsRedeemed: number;
   growthRate: number;
+}
+
+interface RecentActivity {
+  id: string;
+  type: 'stamp' | 'redemption';
+  customerName: string;
+  timestamp: string;
+  description: string;
 }
 
 export default function Dashboard() {
@@ -23,11 +32,13 @@ export default function Dashboard() {
     rewardsRedeemed: 0,
     growthRate: 0,
   });
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (user) {
       fetchDashboardStats();
+      fetchRecentActivity();
     }
   }, [user]);
 
@@ -116,6 +127,86 @@ export default function Dashboard() {
     }
   };
 
+  const fetchRecentActivity = async () => {
+    try {
+      if (!user) return;
+
+      // Get business ID
+      const { data: businesses } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_id', user.id)
+        .limit(1);
+
+      if (!businesses || businesses.length === 0) return;
+
+      const businessId = businesses[0].id;
+
+      // Fetch recent stamp transactions with customer profiles
+      const { data: transactions } = await supabase
+        .from('stamp_transactions')
+        .select(`
+          id,
+          created_at,
+          customer_id,
+          profiles!stamp_transactions_customer_id_fkey (
+            full_name,
+            email
+          )
+        `)
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      // Fetch recent redemptions with customer profiles
+      const { data: redemptions } = await supabase
+        .from('rewards_redeemed')
+        .select(`
+          id,
+          created_at,
+          customer_id,
+          is_redeemed,
+          profiles!rewards_redeemed_customer_id_fkey (
+            full_name,
+            email
+          )
+        `)
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      // Combine and format activities
+      const activities: RecentActivity[] = [];
+
+      transactions?.forEach((t: any) => {
+        activities.push({
+          id: t.id,
+          type: 'stamp',
+          customerName: t.profiles?.full_name || t.profiles?.email?.split('@')[0] || 'Customer',
+          timestamp: t.created_at,
+          description: 'collected a stamp'
+        });
+      });
+
+      redemptions?.forEach((r: any) => {
+        activities.push({
+          id: r.id,
+          type: 'redemption',
+          customerName: r.profiles?.full_name || r.profiles?.email?.split('@')[0] || 'Customer',
+          timestamp: r.created_at,
+          description: r.is_redeemed ? 'redeemed a reward' : 'generated redemption code'
+        });
+      });
+
+      // Sort by timestamp and take top 10
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      setRecentActivity(activities.slice(0, 10));
+
+    } catch (error) {
+      console.error('Error fetching recent activity:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -200,9 +291,43 @@ export default function Dashboard() {
 
             <Card className="p-8">
               <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-              <p className="text-muted-foreground text-center py-8">
-                Activity feed coming soon! Track customer visits, stamp transactions, and reward redemptions in real-time.
-              </p>
+              {recentActivity.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">
+                  No recent activity yet. Once customers start collecting stamps, you'll see their activity here.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {recentActivity.map((activity) => (
+                    <div 
+                      key={activity.id}
+                      className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                    >
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        activity.type === 'stamp' 
+                          ? 'bg-primary/20' 
+                          : 'bg-success/20'
+                      }`}>
+                        {activity.type === 'stamp' ? (
+                          <Coffee className="w-5 h-5 text-primary" />
+                        ) : (
+                          <Gift className="w-5 h-5 text-success" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">
+                          <span className="text-foreground">{activity.customerName}</span>
+                          {' '}
+                          <span className="text-muted-foreground">{activity.description}</span>
+                        </p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                          <Clock className="w-3 h-3" />
+                          {format(new Date(activity.timestamp), 'MMM d, yyyy h:mm a')}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Card>
           </>
         )}

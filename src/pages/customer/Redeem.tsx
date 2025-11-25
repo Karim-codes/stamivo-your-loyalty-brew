@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { FeedbackDialog } from "@/components/FeedbackDialog";
 
 interface CompletedCard {
   id: string;
@@ -41,6 +42,17 @@ export default function Redeem() {
   const [redemptionCodes, setRedemptionCodes] = useState<RedemptionCode[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
+  const [feedbackDialog, setFeedbackDialog] = useState<{
+    open: boolean;
+    businessName: string;
+    businessId: string;
+    redemptionId: string;
+  }>({
+    open: false,
+    businessName: "",
+    businessId: "",
+    redemptionId: "",
+  });
 
   useEffect(() => {
     if (user) {
@@ -64,12 +76,28 @@ export default function Redeem() {
         },
         (payload) => {
           const newData = payload.new as any;
-          if (newData.is_redeemed && !payload.old.is_redeemed) {
+          const oldData = payload.old as any;
+          if (newData.is_redeemed && !oldData.is_redeemed) {
             // Reward was just redeemed
             toast.success("🎉 Your reward has been redeemed!", {
               description: "The barista has verified and redeemed your reward.",
               duration: 6000
             });
+            
+            // Find the business name for feedback
+            const code = redemptionCodes.find(c => c.id === newData.id);
+            if (code) {
+              // Open feedback dialog after a short delay
+              setTimeout(() => {
+                setFeedbackDialog({
+                  open: true,
+                  businessName: code.business_name,
+                  businessId: code.business_id,
+                  redemptionId: newData.id,
+                });
+              }, 1000);
+            }
+            
             fetchData(); // Refresh the list
           }
         }
@@ -399,6 +427,17 @@ export default function Redeem() {
           </div>
         )}
       </div>
+
+      {/* Feedback Dialog */}
+      <FeedbackDialog
+        open={feedbackDialog.open}
+        onOpenChange={(open) =>
+          setFeedbackDialog((prev) => ({ ...prev, open }))
+        }
+        businessName={feedbackDialog.businessName}
+        businessId={feedbackDialog.businessId}
+        redemptionId={feedbackDialog.redemptionId}
+      />
     </div>
   );
 }

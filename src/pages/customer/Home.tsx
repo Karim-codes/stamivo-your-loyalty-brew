@@ -20,6 +20,7 @@ interface StampCard {
   id: string;
   stamps_collected: number;
   is_completed: boolean;
+  has_redeemed_reward?: boolean;
   business: {
     id: string;
     business_name: string;
@@ -94,10 +95,19 @@ export default function CustomerHome() {
             .eq('is_active', true)
             .maybeSingle();
 
+          // Check if this card has been redeemed
+          const { data: redemptionData } = await supabase
+            .from('rewards_redeemed')
+            .select('is_redeemed')
+            .eq('stamp_card_id', card.id)
+            .eq('is_redeemed', true)
+            .maybeSingle();
+
           return {
             id: card.id,
             stamps_collected: card.stamps_collected,
             is_completed: card.is_completed,
+            has_redeemed_reward: !!redemptionData,
             business: card.businesses,
             loyalty_program: programData || { stamps_required: 5, reward_description: 'Free reward' },
           };
@@ -170,7 +180,7 @@ export default function CustomerHome() {
         </div>
 
         {/* Redeem Button */}
-        {stampCards.some(card => card.is_completed) && (
+        {stampCards.some(card => card.is_completed && !card.has_redeemed_reward) && (
           <Button 
             onClick={() => navigate("/customer/redeem")}
             variant="secondary"
@@ -255,10 +265,18 @@ export default function CustomerHome() {
                 <span className="font-medium">{card.loyalty_program.reward_description}</span>
               </div>
 
-              {card.is_completed && (
+              {card.is_completed && !card.has_redeemed_reward && (
                 <div className="mt-3 text-center">
                   <span className="inline-block bg-success text-success-foreground px-4 py-2 rounded-full text-sm font-medium">
                     🎉 Ready to redeem!
+                  </span>
+                </div>
+              )}
+              
+              {card.has_redeemed_reward && (
+                <div className="mt-3 text-center">
+                  <span className="inline-block bg-secondary text-secondary-foreground px-4 py-2 rounded-full text-sm font-medium">
+                    ✓ Reward Redeemed
                   </span>
                 </div>
               )}

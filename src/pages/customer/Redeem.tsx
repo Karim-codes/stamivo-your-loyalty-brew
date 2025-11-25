@@ -48,6 +48,39 @@ export default function Redeem() {
     }
   }, [user]);
 
+  // Real-time listener for redemption updates
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('redemption-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rewards_redeemed',
+          filter: `customer_id=eq.${user.id}`
+        },
+        (payload) => {
+          const newData = payload.new as any;
+          if (newData.is_redeemed && !payload.old.is_redeemed) {
+            // Reward was just redeemed
+            toast.success("🎉 Your reward has been redeemed!", {
+              description: "The barista has verified and redeemed your reward.",
+              duration: 6000
+            });
+            fetchData(); // Refresh the list
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const fetchData = async () => {
     if (!user) return;
 

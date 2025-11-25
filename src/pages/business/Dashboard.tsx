@@ -1,12 +1,20 @@
 import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Coffee, Gift, TrendingUp, QrCode, Clock } from "lucide-react";
+import { Users, Coffee, Gift, TrendingUp, QrCode, Clock, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface DashboardStats {
   totalCustomers: number;
@@ -24,8 +32,9 @@ interface RecentActivity {
 }
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const [businessName, setBusinessName] = useState<string>("Business Dashboard");
   const [stats, setStats] = useState<DashboardStats>({
     totalCustomers: 0,
     stampsGiven: 0,
@@ -34,6 +43,12 @@ export default function Dashboard() {
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out successfully");
+    navigate("/");
+  };
 
   useEffect(() => {
     if (user) {
@@ -46,10 +61,10 @@ export default function Dashboard() {
     try {
       if (!user) return;
 
-      // Get business ID for the current user (get first business if multiple exist)
+      // Get business ID and name for the current user
       const { data: businesses } = await supabase
         .from('businesses')
-        .select('id')
+        .select('id, business_name')
         .eq('owner_id', user.id)
         .limit(1);
 
@@ -59,6 +74,7 @@ export default function Dashboard() {
       }
 
       const business = businesses[0];
+      setBusinessName(business.business_name);
 
       // Get total unique customers
       const { data: customers, error: customersError } = await supabase
@@ -158,49 +174,40 @@ export default function Dashboard() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      // Fetch recent redemptions with customer profiles
+      // Fetch recent redemptions with customer profiles (ONLY redeemed ones)
       const { data: redemptions } = await supabase
         .from('rewards_redeemed')
         .select(`
           id,
-          created_at,
+          redeemed_at,
           customer_id,
-          is_redeemed,
           profiles!rewards_redeemed_customer_id_fkey (
             full_name,
             email
           )
         `)
         .eq('business_id', businessId)
-        .order('created_at', { ascending: false })
-        .limit(5);
+        .eq('is_redeemed', true)
+        .not('redeemed_at', 'is', null)
+        .order('redeemed_at', { ascending: false })
+        .limit(10);
 
       // Combine and format activities
       const activities: RecentActivity[] = [];
-
-      transactions?.forEach((t: any) => {
-        activities.push({
-          id: t.id,
-          type: 'stamp',
-          customerName: t.profiles?.full_name || t.profiles?.email?.split('@')[0] || 'Customer',
-          timestamp: t.created_at,
-          description: 'collected a stamp'
-        });
-      });
 
       redemptions?.forEach((r: any) => {
         activities.push({
           id: r.id,
           type: 'redemption',
           customerName: r.profiles?.full_name || r.profiles?.email?.split('@')[0] || 'Customer',
-          timestamp: r.created_at,
-          description: r.is_redeemed ? 'redeemed a reward' : 'generated redemption code'
+          timestamp: r.redeemed_at,
+          description: 'redeemed a reward'
         });
       });
 
-      // Sort by timestamp and take top 10
+      // Sort by timestamp
       activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      setRecentActivity(activities.slice(0, 10));
+      setRecentActivity(activities);
 
     } catch (error) {
       console.error('Error fetching recent activity:', error);
@@ -212,10 +219,10 @@ export default function Dashboard() {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8 flex justify-between items-start flex-wrap gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Business Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-2">{businessName}</h1>
             <p className="text-muted-foreground">Welcome back!</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <Button onClick={() => navigate("/business/analytics")} variant="outline" className="flex items-center gap-2">
               <TrendingUp className="w-4 h-4" />
               Analytics
@@ -228,6 +235,30 @@ export default function Dashboard() {
               <QrCode className="w-4 h-4" />
               View QR Code
             </Button>
+            
+            {/* Profile/Logout Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon" className="rounded-full">
+                  <Users className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium">Business Account</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
+                  <LogOut className="mr-2 w-4 h-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

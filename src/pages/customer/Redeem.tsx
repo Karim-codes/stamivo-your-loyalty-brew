@@ -199,6 +199,21 @@ export default function Redeem() {
   const generateRedemptionCode = async (stampCardId: string, businessId: string) => {
     if (!user) return;
 
+    // Check if this stamp card already has a redemption record
+    const existingRedemption = redemptionCodes.find(
+      code => code.business_id === businessId && 
+              (code.is_redeemed || !isCodeExpired(code.code_expires_at))
+    );
+
+    if (existingRedemption) {
+      if (existingRedemption.is_redeemed) {
+        toast.error("This reward has already been redeemed");
+      } else {
+        toast.error("You already have an active code for this business");
+      }
+      return;
+    }
+
     setGenerating(stampCardId);
 
     try {
@@ -343,6 +358,14 @@ export default function Redeem() {
                           !code.is_redeemed && 
                           !isCodeExpired(code.code_expires_at)
                 );
+                
+                const hasBeenRedeemed = redemptionCodes.some(
+                  code => code.business_id === card.business.id && code.is_redeemed
+                );
+                
+                const redeemedRecord = redemptionCodes.find(
+                  code => code.business_id === card.business.id && code.is_redeemed
+                );
 
                 return (
                   <Card key={card.id} className="p-6">
@@ -373,26 +396,39 @@ export default function Redeem() {
                       </span>
                     </div>
 
-                    <Button
-                      onClick={() => generateRedemptionCode(card.id, card.business.id)}
-                      disabled={generating === card.id || hasActiveCode}
-                      className="w-full"
-                    >
-                      {generating === card.id ? (
-                        <span className="flex items-center gap-2">
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          Generating...
-                        </span>
-                      ) : hasActiveCode ? (
-                        "Code Already Generated"
-                      ) : (
-                        "Generate Redemption Code"
-                      )}
-                    </Button>
+                    {hasBeenRedeemed ? (
+                      <div className="text-center py-3 px-4 bg-muted rounded-lg">
+                        <p className="text-sm text-muted-foreground mb-1">
+                          Redeemed on
+                        </p>
+                        <p className="text-sm font-medium">
+                          {redeemedRecord?.redeemed_at && format(new Date(redeemedRecord.redeemed_at), 'PPp')}
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={() => generateRedemptionCode(card.id, card.business.id)}
+                          disabled={generating === card.id || hasActiveCode}
+                          className="w-full"
+                        >
+                          {generating === card.id ? (
+                            <span className="flex items-center gap-2">
+                              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                              Generating...
+                            </span>
+                          ) : hasActiveCode ? (
+                            "Code Already Generated"
+                          ) : (
+                            "Generate Redemption Code"
+                          )}
+                        </Button>
 
-                    <p className="text-xs text-muted-foreground text-center mt-2">
-                      Completed {format(new Date(card.completed_at), 'PPP')}
-                    </p>
+                        <p className="text-xs text-muted-foreground text-center mt-2">
+                          Completed {format(new Date(card.completed_at), 'PPP')}
+                        </p>
+                      </>
+                    )}
                   </Card>
                 );
               })}

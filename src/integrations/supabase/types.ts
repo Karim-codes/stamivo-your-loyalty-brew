@@ -70,6 +70,67 @@ export type Database = {
           },
         ]
       }
+      customer_feedback: {
+        Row: {
+          business_id: string
+          business_response: string | null
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          rating: number
+          redemption_id: string
+          responded_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          business_response?: string | null
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          rating: number
+          redemption_id: string
+          responded_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          business_response?: string | null
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          rating?: number
+          redemption_id?: string
+          responded_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_feedback_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_feedback_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_feedback_redemption_id_fkey"
+            columns: ["redemption_id"]
+            isOneToOne: false
+            referencedRelation: "rewards_redeemed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loyalty_programs: {
         Row: {
           allow_multiple_scans: boolean | null

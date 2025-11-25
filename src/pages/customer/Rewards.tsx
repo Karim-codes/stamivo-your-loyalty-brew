@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Gift, Clock, ArrowLeft } from "lucide-react";
+import { Gift, Clock, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ interface StampCard {
   stamps_collected: number;
   is_completed: boolean;
   completed_at: string | null;
+  has_redeemed_reward?: boolean;
   businesses: {
     business_name: string;
     logo_url: string | null;
@@ -59,7 +60,24 @@ export default function Rewards() {
       const completed = data?.filter((card) => card.is_completed) || [];
       const pending = data?.filter((card) => !card.is_completed) || [];
 
-      setCompletedCards(completed as any);
+      // Check which completed cards have been redeemed
+      const completedWithRedemptionStatus = await Promise.all(
+        completed.map(async (card) => {
+          const { data: redemptionData } = await supabase
+            .from('rewards_redeemed')
+            .select('is_redeemed')
+            .eq('stamp_card_id', card.id)
+            .eq('is_redeemed', true)
+            .maybeSingle();
+
+          return {
+            ...card,
+            has_redeemed_reward: !!redemptionData
+          };
+        })
+      );
+
+      setCompletedCards(completedWithRedemptionStatus as any);
       setPendingCards(pending as any);
     } catch (error) {
       console.error("Error fetching stamp cards:", error);
@@ -120,13 +138,25 @@ export default function Rewards() {
                     </p>
                   </div>
                 </div>
-                <Button 
-                  className="w-full" 
-                  size="lg"
-                  onClick={() => navigate("/customer/redeem")}
-                >
-                  Redeem Reward
-                </Button>
+                {card.has_redeemed_reward ? (
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    variant="secondary"
+                    disabled
+                  >
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Already Redeemed
+                  </Button>
+                ) : (
+                  <Button 
+                    className="w-full" 
+                    size="lg"
+                    onClick={() => navigate("/customer/redeem")}
+                  >
+                    Redeem Reward
+                  </Button>
+                )}
               </Card>
             ))}
             {completedCards.length === 0 && (

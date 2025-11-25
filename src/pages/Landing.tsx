@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Coffee, Smartphone, Star, TrendingUp, Zap, BarChart3, ArrowRight } from "lucide-react";
@@ -8,6 +8,8 @@ import AnimatedCoffeeIcon from "@/components/AnimatedCoffeeIcon";
 import ScrollReveal from "@/components/ScrollReveal";
 import PricingSection from "@/components/PricingSection";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 // Import illustrations
 import BaristaIllustration from "@/assets/barista-illustration.png";
@@ -15,13 +17,47 @@ import WomanWithPhone from "@/assets/woman-with-phone.png";
 import CoffeeCupIcon from "@/assets/coffee-cup-icon.png";
 import CoffeeBeans from "@/assets/coffee-beans.png";
 import WoodenTray from "@/assets/wooden-tray.png";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Landing() {
   const [showModal, setShowModal] = useState(false);
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect authenticated users to their respective dashboards
+  useEffect(() => {
+    if (!loading && user) {
+      // Check user role and redirect accordingly
+      const checkRoleAndRedirect = async () => {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (roleData?.role === 'business') {
+          navigate('/business/dashboard');
+        } else {
+          navigate('/customer');
+        }
+      };
+      
+      checkRoleAndRedirect();
+    }
+  }, [user, loading, navigate]);
 
   const scrollToHowItWorks = () => {
     document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Show loading state while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen overflow-hidden">

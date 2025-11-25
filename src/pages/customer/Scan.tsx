@@ -169,39 +169,57 @@ export default function Scan() {
         return;
       }
 
-      // Check daily scan limit
-      const { data: dailyCheck, error: dailyError } = await supabase.rpc('check_daily_scan_limit', {
-        p_customer_id: user.id,
-        p_business_id: businessId,
-        p_max_scans_per_day: 10
-      });
+      // Prevent business owners from scanning their own QR codes
+      const { data: businessOwner, error: ownerError } = await supabase
+        .from('businesses')
+        .select('owner_id')
+        .eq('id', businessId)
+        .single();
 
-      if (dailyError) {
-        console.error("Error checking daily limit:", dailyError);
-        throw dailyError;
+      if (ownerError) {
+        console.error("Error checking business owner:", ownerError);
+        throw ownerError;
       }
 
-      if (!dailyCheck) {
-        toast.error("Daily scan limit reached (10 scans/day). Please try again tomorrow.");
-        setTimeout(() => navigate("/customer"), 1500);
+      if (businessOwner && businessOwner.owner_id === user.id) {
+        toast.error("You cannot collect stamps from your own business! 🚫", {
+          description: "This would be cheating 😉"
+        });
+        setTimeout(() => navigate("/customer"), 2000);
         return;
       }
 
-      // Check weekly scan limit
-      const { data: weeklyCheck, error: weeklyError } = await supabase.rpc('check_weekly_scan_limit', {
-        p_customer_id: user.id,
-        p_business_id: businessId,
-        p_max_scans_per_week: 50
-      });
+      // Check if customer already scanned this business today (one stamp per business per day)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const { data: todaysScans, error: scanCheckError } = await supabase
+        .from('stamp_transactions')
+        .select('id, created_at')
+        .eq('customer_id', user.id)
+        .eq('business_id', businessId)
+        .gte('created_at', today.toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-      if (weeklyError) {
-        console.error("Error checking weekly limit:", weeklyError);
-        throw weeklyError;
+      if (scanCheckError) {
+        console.error("Error checking today's scans:", scanCheckError);
+        throw scanCheckError;
       }
 
-      if (!weeklyCheck) {
-        toast.error("Weekly scan limit reached (50 scans/week). Please try again later.");
-        setTimeout(() => navigate("/customer"), 1500);
+      if (todaysScans && todaysScans.length > 0) {
+        const lastScanTime = new Date(todaysScans[0].created_at);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const hoursUntilTomorrow = Math.floor((tomorrow.getTime() - Date.now()) / (1000 * 60 * 60));
+        const minutesUntilTomorrow = Math.floor(((tomorrow.getTime() - Date.now()) % (1000 * 60 * 60)) / (1000 * 60));
+        
+        toast.error("You already collected a stamp today! ☕", {
+          description: `Come back in ${hoursUntilTomorrow}h ${minutesUntilTomorrow}m for your next stamp`
+        });
+        
+        setTimeout(() => navigate("/customer"), 2000);
         return;
       }
 

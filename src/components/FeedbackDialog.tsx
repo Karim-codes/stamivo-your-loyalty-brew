@@ -41,14 +41,24 @@ export function FeedbackDialog({
     setSubmitting(true);
 
     try {
-      // Store feedback in a new table or use existing structure
-      // For now, we'll log it and show success
-      console.log("Feedback submitted:", {
-        businessId,
-        redemptionId,
-        rating,
-        comment,
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("You must be logged in to submit feedback");
+        return;
+      }
+
+      const { error } = await supabase
+        .from('customer_feedback')
+        .insert({
+          customer_id: user.id,
+          business_id: businessId,
+          redemption_id: redemptionId,
+          rating,
+          comment: comment.trim() || null,
+        });
+
+      if (error) throw error;
 
       toast.success("Thank you for your feedback!", {
         description: "Your review helps us improve the experience.",

@@ -237,7 +237,7 @@ export default function Scan() {
         return;
       }
 
-      // Get or create stamp card with better error handling
+      // Get or create stamp card
       let { data: stampCard, error: fetchError } = await supabase
         .from('stamp_cards')
         .select('*')
@@ -251,124 +251,67 @@ export default function Scan() {
         throw fetchError;
       }
 
-      let newStampCount = 1;
       let stampCardId = '';
 
       if (!stampCard) {
-        // Create new stamp card - first check one more time if it exists
-        const { data: doubleCheck } = await supabase
+        // Create new stamp card if it doesn't exist
+        const { data: newCard, error: createError } = await supabase
           .from('stamp_cards')
-          .select('*')
-          .eq('customer_id', user.id)
-          .eq('business_id', businessId)
-          .eq('is_completed', false)
-          .maybeSingle();
-
-        if (doubleCheck) {
-          // Card exists, use it
-          stampCard = doubleCheck;
-        } else {
-          // Try to create new card
-          const { data: newCard, error: createError } = await supabase
-            .from('stamp_cards')
-            .insert({
-              customer_id: user.id,
-              business_id: businessId,
-              stamps_collected: 1,
-              is_completed: false
-            })
-            .select()
-            .single();
-
-          if (createError) {
-            console.error("Error creating stamp card:", createError);
-            toast.error("Failed to create stamp card. Please try again.");
-            setTimeout(() => navigate("/customer"), 1500);
-            return;
-          }
-
-          stampCardId = newCard.id;
-          newStampCount = 1;
-        }
-      }
-
-      // If we have an existing card, update it
-      if (stampCard) {
-        // Update existing stamp card
-        newStampCount = stampCard.stamps_collected + 1;
-        const isCompleted = newStampCount >= loyaltyProgram.stamps_required;
-
-        const { error: updateError } = await supabase
-          .from('stamp_cards')
-          .update({
-            stamps_collected: newStampCount,
-            is_completed: isCompleted,
-            completed_at: isCompleted ? new Date().toISOString() : null
-          })
-          .eq('id', stampCard.id);
-
-        if (updateError) {
-          console.error("Error updating stamp card:", updateError);
-          throw updateError;
-        }
-
-        stampCardId = stampCard.id;
-        
-        // Store completion status for navigation
-        const cardCompleted = isCompleted;
-        
-        // Create stamp transaction - this is critical for tracking
-        console.log("Creating transaction with:", { customer_id: user.id, business_id: businessId, stamp_card_id: stampCardId });
-        
-        const { data: transactionData, error: transactionError } = await supabase
-          .from('stamp_transactions')
           .insert({
             customer_id: user.id,
             business_id: businessId,
-            stamp_card_id: stampCardId,
-            status: 'verified'
+            stamps_collected: 0, // Start at 0, will increment on approval
+            is_completed: false
           })
           .select()
           .single();
 
-        if (transactionError) {
-          console.error("Error creating transaction:", transactionError);
-          toast.error("Stamp collected but transaction failed to record");
-          // Don't throw - we already updated the card
-        } else {
-          console.log("Transaction created successfully:", transactionData);
+        if (createError) {
+          console.error("Error creating stamp card:", createError);
+          toast.error("Failed to create stamp card. Please try again.");
+          setTimeout(() => navigate("/customer"), 1500);
+          return;
         }
 
-        console.log("Stamp collected successfully! New count:", newStampCount);
-
-        // Trigger haptic feedback and sound
-        triggerHapticFeedback();
-        playSuccessSound();
-
-        // Show success with smooth animation
-        if (cardCompleted) {
-          toast.success("🎉 Stamp card completed!", {
-            description: "You've earned a reward! Check the Redeem page.",
-            duration: 2500,
-          });
-        } else {
-          toast.success("Stamp collected! ☕", {
-            description: `You now have ${newStampCount} stamp${newStampCount !== 1 ? 's' : ''}!`,
-            duration: 2000,
-          });
-        }
-
-        // Navigate back after animation
-        setTimeout(() => {
-          navigate("/customer", { 
-            state: { 
-              newStamp: true, 
-              stampCount: newStampCount,
-              isCompleted: cardCompleted
-            } 
-          });
-        }, 1800);
+        stampCardId = newCard.id;
+      } else {
+        stampCardId = stampCard.id;
       }
+
+      // Create PENDING stamp transaction (awaiting business approval)
+      console.log("Creating pending transaction for approval:", { customer_id: user.id, business_id: businessId, stamp_card_id: stampCardId });
+      
+      const { data: transactionData, error: transactionError } = await supabase
+        .from('stamp_transactions')
+        .insert({
+          customer_id: user.id,
+          business_id: businessId,
+          stamp_card_id: stampCardId,
+          status: 'pending' // Wait for business approval
+        })
+        .select()
+        .single();
+
+      if (transactionError) {
+        console.error("Error creating pending transaction:", transactionError);
+        toast.error("Failed to submit stamp request. Please try again.");
+        setTimeout(() => navigate("/customer"), 1500);
+        return;
+      }
+
+      console.log("Pending transaction created successfully:", transactionData);
+
+      // Trigger haptic feedback
+      triggerHapticFeedback();
+      playSuccessSound();
+
+      // Show success message - waiting for approval
+      toast.success("✅ Stamp request sent!", {
+        description: "Waiting for barista approval..."
+      });
+      
+      setTimeout(() => navigate("/customer"), 1500);
+
     } catch (error: any) {
       console.error("Error processing scan:", error);
       toast.error("Failed to collect stamp. Please try again.");

@@ -31,6 +31,15 @@ interface RecentActivity {
   description: string;
 }
 
+interface PendingRequest {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  timestamp: string;
+  stampCardId: string;
+  customerId: string;
+}
+
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -42,7 +51,9 @@ export default function Dashboard() {
     growthRate: 0,
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [processingRequest, setProcessingRequest] = useState<string | null>(null);
 
   const handleSignOut = async () => {
     await signOut();
@@ -54,6 +65,7 @@ export default function Dashboard() {
     if (user) {
       fetchDashboardStats();
       fetchRecentActivity();
+      fetchPendingRequests();
     }
   }, [user]);
 
@@ -214,6 +226,165 @@ export default function Dashboard() {
     }
   };
 
+  const fetchPendingRequests = async () => {
+    try {
+      if (!user) return;
+
+      const { data: businesses } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_id', user.id)
+        .limit(1);
+
+      if (!businesses || businesses.length === 0) return;
+
+      const businessId = businesses[0].id;
+
+      // Fetch pending stamp transactions
+      const { data: pending } = await supabase
+        .from('stamp_transactions')
+        .select(`
+          id,
+          created_at,
+          customer_id,
+          stamp_card_id,
+          profiles!stamp_transactions_customer_id_fkey (
+            full_name,
+            email
+          )
+        `)
+        .eq('business_id', businessId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      const requests: PendingRequest[] = pending?.map((req: any) => ({
+        id: req.id,
+        customerName: req.profiles?.full_name || req.profiles?.email?.split('@')[0] || 'Customer',
+        customerEmail: req.profiles?.email || '',
+        timestamp: req.created_at,
+        stampCardId: req.stamp_card_id,
+        customerId: req.customer_id
+      })) || [];
+
+      setPendingRequests(requests);
+    } catch (error) {
+      console.error('Error fetching pending requests:', error);
+    }
+  };
+
+  const handleApproveStamp = async (requestId: string, stampCardId: string, customerId: string) => {
+    try {
+      setProcessingRequest(requestId);
+
+      // Get business ID
+      const { data: businesses } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_id', user!.id)
+        .limit(1);
+
+      if (!businesses || businesses.length === 0) {
+        toast.error("Business not found");
+        return;
+      }
+
+      const businessId = businesses[0].id;
+
+      // Get loyalty program to check stamps required
+      const { data: loyaltyProgram } = await supabase
+        .from('loyalty_programs')
+        .select('stamps_required')
+        .eq('business_id', businessId)
+        .single();
+
+      if (!loyaltyProgram) {
+        toast.error("Loyalty program not found");
+        return;
+      }
+
+      // Get current stamp card
+      const { data: stampCard } = await supabase
+        .from('stamp_cards')
+        .select('*')
+        .eq('id', stampCardId)
+        .single();
+
+      if (!stampCard) {
+        toast.error("Stamp card not found");
+        return;
+      }
+
+      const newStampCount = stampCard.stamps_collected + 1;
+      const isCompleted = newStampCount >= loyaltyProgram.stamps_required;
+
+      // Update transaction status to verified
+      const { error: transactionError } = await supabase
+        .from('stamp_transactions')
+        .update({
+          status: 'verified',
+          verified_by: user!.id
+        })
+        .eq('id', requestId);
+
+      if (transactionError) throw transactionError;
+
+      // Update stamp card
+      const { error: updateError } = await supabase
+        .from('stamp_cards')
+        .update({
+          stamps_collected: newStampCount,
+          is_completed: isCompleted,
+          completed_at: isCompleted ? new Date().toISOString() : null
+        })
+        .eq('id', stampCardId);
+
+      if (updateError) throw updateError;
+
+      toast.success("✅ Stamp approved!", {
+        description: isCompleted ? "Customer's card is now complete!" : `Customer now has ${newStampCount} stamps`
+      });
+
+      // Refresh data
+      fetchPendingRequests();
+      fetchDashboardStats();
+      fetchRecentActivity();
+
+    } catch (error: any) {
+      console.error('Error approving stamp:', error);
+      toast.error("Failed to approve stamp");
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
+  const handleRejectStamp = async (requestId: string) => {
+    try {
+      setProcessingRequest(requestId);
+
+      // Update transaction status to rejected
+      const { error } = await supabase
+        .from('stamp_transactions')
+        .update({
+          status: 'rejected',
+          verified_by: user!.id
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast.success("Stamp request rejected");
+
+      // Refresh pending requests
+      fetchPendingRequests();
+
+    } catch (error: any) {
+      console.error('Error rejecting stamp:', error);
+      toast.error("Failed to reject stamp");
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -319,6 +490,63 @@ export default function Dashboard() {
                 </div>
               </Card>
             </div>
+
+            {/* Pending Stamp Approvals */}
+            {pendingRequests.length > 0 && (
+              <Card className="p-8 border-primary/50 bg-primary/5">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Coffee className="w-5 h-5 text-primary" />
+                  Pending Stamp Approvals
+                  <span className="ml-2 px-2 py-1 text-xs bg-primary text-primary-foreground rounded-full">
+                    {pendingRequests.length}
+                  </span>
+                </h2>
+                <div className="space-y-3">
+                  {pendingRequests.map((request) => (
+                    <div 
+                      key={request.id}
+                      className="flex items-center justify-between gap-4 p-4 rounded-lg bg-background border-2 border-primary/20 hover:border-primary/40 transition-all"
+                    >
+                      <div className="flex items-center gap-4 flex-1">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/20">
+                          <Coffee className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">
+                            <span className="text-foreground font-semibold">{request.customerName}</span>
+                            {' '}
+                            <span className="text-muted-foreground">wants to collect a stamp</span>
+                          </p>
+                          <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                            <Clock className="w-3 h-3" />
+                            {format(new Date(request.timestamp), 'MMM d, yyyy h:mm a')}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleApproveStamp(request.id, request.stampCardId, request.customerId)}
+                          disabled={processingRequest === request.id}
+                          size="sm"
+                          className="bg-success hover:bg-success/90 text-white"
+                        >
+                          {processingRequest === request.id ? "..." : "✓ Approve"}
+                        </Button>
+                        <Button
+                          onClick={() => handleRejectStamp(request.id)}
+                          disabled={processingRequest === request.id}
+                          size="sm"
+                          variant="outline"
+                          className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                        >
+                          {processingRequest === request.id ? "..." : "✗ Reject"}
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
 
             <Card className="p-8">
               <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>

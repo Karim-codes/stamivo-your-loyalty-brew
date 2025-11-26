@@ -24,10 +24,20 @@ interface AnalyticsData {
   totalRedemptions: number;
   activeCards: number;
   completedCards: number;
+  approvalRate: number;
+  rejectionRate: number;
+  avgApprovalTime: number;
+  totalApproved: number;
+  totalRejected: number;
+  totalPending: number;
   dailyStats: {
     date: string;
     stamps: number;
     redemptions: number;
+  }[];
+  hourlyRequests: {
+    hour: number;
+    count: number;
   }[];
 }
 
@@ -41,7 +51,14 @@ export default function Analytics() {
     totalRedemptions: 0,
     activeCards: 0,
     completedCards: 0,
-    dailyStats: []
+    approvalRate: 0,
+    rejectionRate: 0,
+    avgApprovalTime: 0,
+    totalApproved: 0,
+    totalRejected: 0,
+    totalPending: 0,
+    dailyStats: [],
+    hourlyRequests: []
   });
 
   useEffect(() => {
@@ -126,13 +143,69 @@ export default function Analytics() {
         })
       );
 
+      // Get stamp transaction statistics for approval analytics
+      const { data: allTransactions } = await supabase
+        .from('stamp_transactions')
+        .select('*')
+        .eq('business_id', business.id);
+
+      const approvedTransactions = allTransactions?.filter(t => t.status === 'verified') || [];
+      const rejectedTransactions = allTransactions?.filter(t => t.status === 'rejected') || [];
+      const pendingTransactions = allTransactions?.filter(t => t.status === 'pending') || [];
+
+      const totalApproved = approvedTransactions.length;
+      const totalRejected = rejectedTransactions.length;
+      const totalPending = pendingTransactions.length;
+      const totalProcessed = totalApproved + totalRejected;
+
+      const approvalRate = totalProcessed > 0 ? (totalApproved / totalProcessed) * 100 : 0;
+      const rejectionRate = totalProcessed > 0 ? (totalRejected / totalProcessed) * 100 : 0;
+
+      // Calculate average approval time
+      let totalApprovalTime = 0;
+      let approvalCount = 0;
+
+      approvedTransactions.forEach(transaction => {
+        const createdAt = new Date(transaction.created_at);
+        const scannedAt = new Date(transaction.scanned_at);
+        const timeDiff = (createdAt.getTime() - scannedAt.getTime()) / (1000 * 60);
+        if (timeDiff >= 0 && timeDiff < 1440) {
+          totalApprovalTime += timeDiff;
+          approvalCount++;
+        }
+      });
+
+      const avgApprovalTime = approvalCount > 0 ? totalApprovalTime / approvalCount : 0;
+
+      // Calculate hourly distribution
+      const hourlyMap = new Map<number, number>();
+      for (let i = 0; i < 24; i++) {
+        hourlyMap.set(i, 0);
+      }
+
+      allTransactions?.forEach(transaction => {
+        const hour = new Date(transaction.created_at).getHours();
+        hourlyMap.set(hour, (hourlyMap.get(hour) || 0) + 1);
+      });
+
+      const hourlyRequests = Array.from(hourlyMap.entries())
+        .map(([hour, count]) => ({ hour, count }))
+        .sort((a, b) => a.hour - b.hour);
+
       setAnalytics({
         totalCustomers: uniqueCustomers,
         totalStamps,
         totalRedemptions: redemptions?.length || 0,
         activeCards: activeCards?.length || 0,
         completedCards: completedCards?.length || 0,
-        dailyStats
+        approvalRate,
+        rejectionRate,
+        avgApprovalTime,
+        totalApproved,
+        totalRejected,
+        totalPending,
+        dailyStats,
+        hourlyRequests
       });
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -170,6 +243,70 @@ export default function Analytics() {
             Track your loyalty program performance
           </p>
         </div>
+
+        {/* Approval Analytics */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <Card className="p-6">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Approval Rate</h3>
+            <p className="text-3xl font-bold text-success mb-1">
+              {analytics.approvalRate.toFixed(1)}%
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {analytics.totalApproved} approved
+            </p>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Rejection Rate</h3>
+            <p className="text-3xl font-bold text-destructive mb-1">
+              {analytics.rejectionRate.toFixed(1)}%
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {analytics.totalRejected} rejected
+            </p>
+          </Card>
+
+          <Card className="p-6">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Avg. Approval Time</h3>
+            <p className="text-3xl font-bold text-primary mb-1">
+              {analytics.avgApprovalTime.toFixed(1)}m
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {analytics.totalPending} pending
+            </p>
+          </Card>
+        </div>
+
+        {/* Peak Hours Chart */}
+        <Card className="p-6 mb-8">
+          <h3 className="text-lg font-semibold mb-4">Peak Request Hours</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={analytics.hourlyRequests}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis 
+                dataKey="hour" 
+                tickFormatter={(hour) => `${hour}:00`}
+                className="text-sm"
+              />
+              <YAxis className="text-sm" />
+              <Tooltip 
+                labelFormatter={(hour) => `${hour}:00 - ${hour + 1}:00`}
+                formatter={(value) => [`${value} requests`, 'Requests']}
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+              />
+              <Bar 
+                dataKey="count" 
+                fill="hsl(var(--primary))" 
+                radius={[8, 8, 0, 0]}
+                name="Requests"
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

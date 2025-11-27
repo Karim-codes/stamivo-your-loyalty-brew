@@ -415,7 +415,7 @@ export default function BusinessProfile() {
                       {item.description && (
                         <p className="text-sm text-muted-foreground">{item.description}</p>
                       )}
-                      <p className="text-sm font-semibold text-primary">${item.price.toFixed(2)}</p>
+                      <p className="text-sm font-semibold text-primary">${(item.price ?? 0).toFixed(2)}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-2">

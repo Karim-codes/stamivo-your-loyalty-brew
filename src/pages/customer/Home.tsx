@@ -213,6 +213,10 @@ export default function CustomerHome() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => navigate("/customer/profile")} className="cursor-pointer">
+                <User className="mr-2 w-4 h-4" />
+                Edit Profile
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/customer/history")} className="cursor-pointer">
                 <Clock className="mr-2 w-4 h-4" />
                 View History

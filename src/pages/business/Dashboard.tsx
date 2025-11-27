@@ -415,7 +415,7 @@ export default function Dashboard() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>
+              <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium">Business Account</p>
                     <p className="text-xs text-muted-foreground truncate">
@@ -424,6 +424,10 @@ export default function Dashboard() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/business/profile")} className="cursor-pointer">
+                  <Users className="mr-2 w-4 h-4" />
+                  Shop Settings
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
                   <LogOut className="mr-2 w-4 h-4" />
                   Sign Out

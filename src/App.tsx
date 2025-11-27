@@ -16,11 +16,13 @@ import Scan from "./pages/customer/Scan";
 import Rewards from "./pages/customer/Rewards";
 import Redeem from "./pages/customer/Redeem";
 import History from "./pages/customer/History";
+import CustomerProfile from "./pages/customer/Profile";
 import Onboarding from "./pages/business/Onboarding";
 import Dashboard from "./pages/business/Dashboard";
 import QRCodePage from "./pages/business/QRCode";
 import VerifyRedemption from "./pages/business/VerifyRedemption";
 import Analytics from "./pages/business/Analytics";
+import BusinessProfile from "./pages/business/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -83,6 +85,16 @@ const App = () => (
             <Route path="/business/analytics" element={
               <ProtectedRoute requiredRole="business">
                 <Analytics />
+              </ProtectedRoute>
+            } />
+            <Route path="/business/profile" element={
+              <ProtectedRoute requiredRole="business">
+                <BusinessProfile />
+              </ProtectedRoute>
+            } />
+            <Route path="/customer/profile" element={
+              <ProtectedRoute requiredRole="customer">
+                <CustomerProfile />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

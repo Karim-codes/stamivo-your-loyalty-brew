@@ -387,25 +387,13 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex justify-between items-start flex-wrap gap-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{businessName}</h1>
-            <p className="text-muted-foreground">Welcome back!</p>
-          </div>
-          <div className="flex gap-2 items-center">
-            <Button onClick={() => navigate("/business/analytics")} variant="outline" className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4" />
-              Analytics
-            </Button>
-            <Button onClick={() => navigate("/business/verify")} variant="outline" className="flex items-center gap-2">
-              <Gift className="w-4 h-4" />
-              Verify Rewards
-            </Button>
-            <Button onClick={() => navigate("/business/qr-code")} className="flex items-center gap-2">
-              <QrCode className="w-4 h-4" />
-              View QR Code
-            </Button>
+      <div className="container mx-auto px-3 md:px-4 py-4 md:py-8">
+        <div className="mb-8 space-y-4">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-1">{businessName}</h1>
+              <p className="text-muted-foreground text-sm">Welcome back!</p>
+            </div>
             
             {/* Profile/Logout Dropdown */}
             <DropdownMenu>
@@ -415,7 +403,7 @@ export default function Dashboard() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
+                <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium">Business Account</p>
                     <p className="text-xs text-muted-foreground truncate">
@@ -435,6 +423,22 @@ export default function Dashboard() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
+          
+          {/* Action buttons - responsive grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <Button onClick={() => navigate("/business/qr-code")} className="flex items-center justify-center gap-2">
+              <QrCode className="w-4 h-4" />
+              <span className="hidden sm:inline">View</span> QR Code
+            </Button>
+            <Button onClick={() => navigate("/business/verify")} variant="outline" className="flex items-center justify-center gap-2">
+              <Gift className="w-4 h-4" />
+              <span className="hidden sm:inline">Verify</span> Rewards
+            </Button>
+            <Button onClick={() => navigate("/business/analytics")} variant="outline" className="flex items-center justify-center gap-2 col-span-2 sm:col-span-1">
+              <TrendingUp className="w-4 h-4" />
+              Analytics
+            </Button>
+          </div>
         </div>
 
         {loading ? (
@@ -443,51 +447,51 @@ export default function Dashboard() {
           </div>
         ) : (
           <>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <Card className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
-                    <Users className="w-6 h-6 text-primary" />
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
+              <Card className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/20 rounded-full flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Customers</p>
-                    <p className="text-2xl font-bold">{stats.totalCustomers}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Customers</p>
+                    <p className="text-xl md:text-2xl font-bold">{stats.totalCustomers}</p>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-accent/20 rounded-full flex items-center justify-center">
-                    <Coffee className="w-6 h-6 text-accent" />
+              <Card className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-accent/20 rounded-full flex items-center justify-center shrink-0">
+                    <Coffee className="w-5 h-5 md:w-6 md:h-6 text-accent" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Stamps Given</p>
-                    <p className="text-2xl font-bold">{stats.stampsGiven}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Stamps</p>
+                    <p className="text-xl md:text-2xl font-bold">{stats.stampsGiven}</p>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-success/20 rounded-full flex items-center justify-center">
-                    <Gift className="w-6 h-6 text-success" />
+              <Card className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-success/20 rounded-full flex items-center justify-center shrink-0">
+                    <Gift className="w-5 h-5 md:w-6 md:h-6 text-success" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Rewards Redeemed</p>
-                    <p className="text-2xl font-bold">{stats.rewardsRedeemed}</p>
+                    <p className="text-xs md:text-sm text-muted-foreground">Rewards</p>
+                    <p className="text-xl md:text-2xl font-bold">{stats.rewardsRedeemed}</p>
                   </div>
                 </div>
               </Card>
 
-              <Card className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-caramel/20 rounded-full flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-caramel" />
+              <Card className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-caramel/20 rounded-full flex items-center justify-center shrink-0">
+                    <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-caramel" />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Growth (7 days)</p>
-                    <p className="text-2xl font-bold">
+                    <p className="text-xs md:text-sm text-muted-foreground">Growth</p>
+                    <p className="text-xl md:text-2xl font-bold">
                       {stats.growthRate > 0 ? '+' : ''}{stats.growthRate}%
                     </p>
                   </div>
@@ -497,10 +501,10 @@ export default function Dashboard() {
 
             {/* Pending Stamp Approvals */}
             {pendingRequests.length > 0 && (
-              <Card className="p-8 border-primary/50 bg-primary/5">
-                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Card className="p-4 md:p-8 border-primary/50 bg-primary/5 mb-6">
+                <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
                   <Coffee className="w-5 h-5 text-primary" />
-                  Pending Stamp Approvals
+                  Pending Approvals
                   <span className="ml-2 px-2 py-1 text-xs bg-primary text-primary-foreground rounded-full">
                     {pendingRequests.length}
                   </span>
@@ -509,30 +513,30 @@ export default function Dashboard() {
                   {pendingRequests.map((request) => (
                     <div 
                       key={request.id}
-                      className="flex items-center justify-between gap-4 p-4 rounded-lg bg-background border-2 border-primary/20 hover:border-primary/40 transition-all"
+                      className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 md:p-4 rounded-lg bg-background border-2 border-primary/20 hover:border-primary/40 transition-all"
                     >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/20">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary/20 shrink-0">
                           <Coffee className="w-5 h-5 text-primary" />
                         </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
                             <span className="text-foreground font-semibold">{request.customerName}</span>
                             {' '}
-                            <span className="text-muted-foreground">wants to collect a stamp</span>
+                            <span className="text-muted-foreground hidden sm:inline">wants a stamp</span>
                           </p>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                             <Clock className="w-3 h-3" />
-                            {format(new Date(request.timestamp), 'MMM d, yyyy h:mm a')}
+                            {format(new Date(request.timestamp), 'MMM d, h:mm a')}
                           </div>
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 w-full sm:w-auto">
                         <Button
                           onClick={() => handleApproveStamp(request.id, request.stampCardId, request.customerId)}
                           disabled={processingRequest === request.id}
                           size="sm"
-                          className="bg-success hover:bg-success/90 text-white"
+                          className="flex-1 sm:flex-none bg-success hover:bg-success/90 text-white"
                         >
                           {processingRequest === request.id ? "..." : "✓ Approve"}
                         </Button>
@@ -541,7 +545,7 @@ export default function Dashboard() {
                           disabled={processingRequest === request.id}
                           size="sm"
                           variant="outline"
-                          className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                          className="flex-1 sm:flex-none border-destructive/50 text-destructive hover:bg-destructive/10"
                         >
                           {processingRequest === request.id ? "..." : "✗ Reject"}
                         </Button>
@@ -552,10 +556,10 @@ export default function Dashboard() {
               </Card>
             )}
 
-            <Card className="p-8">
-              <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+            <Card className="p-4 md:p-8">
+              <h2 className="text-lg md:text-xl font-semibold mb-4">Recent Activity</h2>
               {recentActivity.length === 0 ? (
-                <p className="text-muted-foreground text-center py-8">
+                <p className="text-muted-foreground text-center py-6 md:py-8 text-sm">
                   No recent activity yet. Once customers start collecting stamps, you'll see their activity here.
                 </p>
               ) : (
@@ -563,28 +567,28 @@ export default function Dashboard() {
                   {recentActivity.map((activity) => (
                     <div 
                       key={activity.id}
-                      className="flex items-center gap-4 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                      className="flex items-center gap-3 p-3 md:p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
                     >
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center shrink-0 ${
                         activity.type === 'stamp' 
                           ? 'bg-primary/20' 
                           : 'bg-success/20'
                       }`}>
                         {activity.type === 'stamp' ? (
-                          <Coffee className="w-5 h-5 text-primary" />
+                          <Coffee className="w-4 h-4 md:w-5 md:h-5 text-primary" />
                         ) : (
-                          <Gift className="w-5 h-5 text-success" />
+                          <Gift className="w-4 h-4 md:w-5 md:h-5 text-success" />
                         )}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
                           <span className="text-foreground">{activity.customerName}</span>
                           {' '}
                           <span className="text-muted-foreground">{activity.description}</span>
                         </p>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                           <Clock className="w-3 h-3" />
-                          {format(new Date(activity.timestamp), 'MMM d, yyyy h:mm a')}
+                          {format(new Date(activity.timestamp), 'MMM d, h:mm a')}
                         </div>
                       </div>
                     </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { QrCode, ArrowRight, Gift, Coffee, User, LogOut, Clock } from "lucide-react";
+import { QrCode, ArrowRight, Gift, Coffee, User, LogOut, Clock, Store, MapPin } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +16,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ConfettiEffect } from "@/components/ConfettiEffect";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 interface StampCard {
   id: string;
@@ -34,14 +41,15 @@ interface StampCard {
   };
 }
 
-interface GroupedStampCards {
-  business: {
-    id: string;
-    business_name: string;
-    address: string;
-    logo_url: string | null;
+interface ExploreBusiness {
+  id: string;
+  business_name: string;
+  address: string | null;
+  logo_url: string | null;
+  loyalty_program?: {
+    stamps_required: number;
+    reward_description: string;
   };
-  cards: StampCard[];
 }
 
 export default function CustomerHome() {
@@ -49,13 +57,14 @@ export default function CustomerHome() {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [stampCards, setStampCards] = useState<StampCard[]>([]);
-  const [groupedCards, setGroupedCards] = useState<GroupedStampCards[]>([]);
+  const [exploreShops, setExploreShops] = useState<ExploreBusiness[]>([]);
   const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchStampCards();
+      fetchExploreShops();
     }
     
     // Show notification if coming from scan
@@ -64,7 +73,6 @@ export default function CustomerHome() {
       const isCompleted = location.state?.isCompleted || false;
       
       if (isCompleted) {
-        // Trigger confetti for completed card
         setShowConfetti(true);
         setTimeout(() => setShowConfetti(false), 3000);
         
@@ -79,7 +87,6 @@ export default function CustomerHome() {
         });
       }
       
-      // Clear the state
       window.history.replaceState({}, document.title);
     }
   }, [user, location.state]);
@@ -112,7 +119,6 @@ export default function CustomerHome() {
 
       if (error) throw error;
 
-      // Fetch loyalty programs for each business
       const cardsWithPrograms = await Promise.all(
         (data || []).map(async (card: any) => {
           const { data: programData } = await supabase
@@ -122,7 +128,6 @@ export default function CustomerHome() {
             .eq('is_active', true)
             .maybeSingle();
 
-          // Check if this card has been redeemed
           const { data: redemptionData } = await supabase
             .from('rewards_redeemed')
             .select('is_redeemed')
@@ -142,27 +147,64 @@ export default function CustomerHome() {
       );
 
       setStampCards(cardsWithPrograms);
-
-      // Group cards by business
-      const grouped = cardsWithPrograms.reduce((acc: GroupedStampCards[], card) => {
-        const existingGroup = acc.find(g => g.business.id === card.business.id);
-        if (existingGroup) {
-          existingGroup.cards.push(card);
-        } else {
-          acc.push({
-            business: card.business,
-            cards: [card]
-          });
-        }
-        return acc;
-      }, []);
-
-      setGroupedCards(grouped);
     } catch (error: any) {
       console.error('Error fetching stamp cards:', error);
       toast.error("Failed to load your stamp cards");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchExploreShops = async () => {
+    if (!user) return;
+
+    try {
+      // Get businesses the user already has cards for
+      const { data: userCards } = await supabase
+        .from('stamp_cards')
+        .select('business_id')
+        .eq('customer_id', user.id);
+
+      const userBusinessIds = (userCards || []).map(c => c.business_id);
+
+      // Fetch public businesses
+      const { data: businesses, error } = await supabase
+        .from('businesses')
+        .select(`
+          id,
+          business_name,
+          address,
+          logo_url
+        `)
+        .eq('is_public', true)
+        .limit(10);
+
+      if (error) throw error;
+
+      // Filter out businesses the user already has cards for
+      const newBusinesses = (businesses || []).filter(b => !userBusinessIds.includes(b.id));
+
+      // Fetch loyalty programs for these businesses
+      const businessesWithPrograms = await Promise.all(
+        newBusinesses.map(async (business) => {
+          const { data: programData } = await supabase
+            .from('loyalty_programs')
+            .select('stamps_required, reward_description')
+            .eq('business_id', business.id)
+            .eq('is_active', true)
+            .maybeSingle();
+
+          return {
+            ...business,
+            loyalty_program: programData || undefined,
+          };
+        })
+      );
+
+      // Only show businesses with active loyalty programs
+      setExploreShops(businessesWithPrograms.filter(b => b.loyalty_program));
+    } catch (error) {
+      console.error('Error fetching explore shops:', error);
     }
   };
 
@@ -178,8 +220,7 @@ export default function CustomerHome() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 pb-20">
-      {/* Confetti Effect */}
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 pb-24">
       <ConfettiEffect trigger={showConfetti} />
       
       {/* Header */}
@@ -192,7 +233,6 @@ export default function CustomerHome() {
             </p>
           </div>
           
-          {/* Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
@@ -229,7 +269,6 @@ export default function CustomerHome() {
           </DropdownMenu>
         </div>
 
-        {/* Redeem Button */}
         {stampCards.some(card => card.is_completed && !card.has_redeemed_reward) && (
           <Button 
             onClick={() => navigate("/customer/redeem")}
@@ -242,131 +281,191 @@ export default function CustomerHome() {
         )}
       </div>
 
-      {/* Shops - Desktop Grid Layout */}
-      <div className="container mx-auto px-4 py-6">
-        <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        {groupedCards.length === 0 ? (
-          <div className="lg:col-span-2 xl:col-span-3">
-            <Card className="p-8 text-center space-y-4">
-              <Coffee className="w-16 h-16 mx-auto text-muted-foreground" />
-              <div>
-                <h3 className="text-xl font-bold mb-2">No stamp cards yet</h3>
-                <p className="text-muted-foreground">
-                  Scan a QR code at a coffee shop to start collecting stamps!
-                </p>
-              </div>
-              <Button onClick={() => navigate("/customer/scan")} size="lg">
-                <QrCode className="mr-2 w-5 h-5" />
-                Scan QR Code
-              </Button>
-            </Card>
-          </div>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-6 space-y-8">
+        
+        {/* My Cards Section - Carousel */}
+        {stampCards.length === 0 ? (
+          <Card className="p-8 text-center space-y-4">
+            <Coffee className="w-16 h-16 mx-auto text-muted-foreground" />
+            <div>
+              <h3 className="text-xl font-bold mb-2">No stamp cards yet</h3>
+              <p className="text-muted-foreground">
+                Scan a QR code at a coffee shop to start collecting stamps!
+              </p>
+            </div>
+            <Button onClick={() => navigate("/customer/scan")} size="lg">
+              <QrCode className="mr-2 w-5 h-5" />
+              Scan QR Code
+            </Button>
+          </Card>
         ) : (
-          groupedCards.map((group) => (
-            <Card key={group.business.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col">
-              {/* Business Header */}
-              <div 
-                className="p-5 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent cursor-pointer hover:from-primary/15 hover:via-primary/10 transition-all duration-300"
-                onClick={() => navigate("/customer/rewards")}
-              >
-                <div className="flex items-center gap-4">
-                  {group.business.logo_url ? (
-                    <img
-                      src={group.business.logo_url}
-                      alt={group.business.business_name}
-                      className="w-16 h-16 rounded-full object-cover border-3 border-primary/30 shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center border-3 border-primary/30 shadow-lg">
-                      <Coffee className="w-8 h-8 text-white" />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-0.5">{group.business.business_name}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-1">{group.business.address}</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-
-              {/* Stamp Cards for this Business */}
-              <div className="divide-y flex-1 flex flex-col">
-                {group.cards.map((card) => {
+          <div>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Coffee className="w-5 h-5 text-primary" />
+              My Loyalty Cards
+            </h2>
+            
+            <Carousel
+              opts={{
+                align: "start",
+                loop: stampCards.length > 1,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {stampCards.map((card) => {
                   const isInactive = card.is_completed || card.has_redeemed_reward;
                   const isCompleted = card.is_completed && !card.has_redeemed_reward;
                   
                   return (
-                    <div 
-                      key={card.id}
-                      className={`p-5 transition-all flex-1 ${
-                        isInactive 
-                          ? 'opacity-60 bg-muted/20' 
-                          : 'hover:bg-gradient-to-r hover:from-accent/5 hover:to-transparent'
-                      } ${isCompleted ? 'animate-pulse' : ''}`}
-                    >
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-sm font-semibold text-foreground">
-                          {card.stamps_collected} / {card.loyalty_program.stamps_required} stamps
-                        </p>
-                        {card.has_redeemed_reward && (
-                          <span className="text-xs bg-muted text-muted-foreground px-3 py-1.5 rounded-full font-medium border border-border">
-                            ✓ Redeemed
-                          </span>
-                        )}
-                        {isCompleted && (
-                          <span className="text-xs bg-gradient-to-r from-success to-success/80 text-white px-4 py-1.5 rounded-full font-bold shadow-lg animate-bounce">
-                            🎉 Ready!
-                          </span>
-                        )}
-                      </div>
-
-                      <Progress
-                        value={(card.stamps_collected / card.loyalty_program.stamps_required) * 100}
-                        className={`h-2.5 mb-4 ${isCompleted ? 'animate-pulse' : ''}`}
-                      />
-
-                      {/* Stamp visualization */}
-                      <div className="flex gap-2.5 mb-4 flex-wrap justify-center">
-                        {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => {
-                          const isCollected = i < card.stamps_collected;
-                          const justCompleted = isCompleted && i === card.stamps_collected - 1;
-                          
-                          return (
-                            <div
-                              key={i}
-                              className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-lg font-bold transition-all duration-500 ${
-                                isCollected
-                                  ? isInactive 
-                                    ? "bg-muted border-muted-foreground/30 text-muted-foreground scale-95"
-                                    : "bg-gradient-to-br from-primary to-primary/80 border-primary/50 text-white shadow-lg scale-105"
-                                  : "border-muted-foreground/20 text-muted-foreground/30 scale-90"
-                              } ${justCompleted ? 'animate-bounce' : ''} ${isCollected && !isInactive ? 'hover:scale-110' : ''}`}
-                              style={{
-                                animationDelay: `${i * 0.1}s`
-                              }}
-                            >
-                              {isCollected ? "☕" : ""}
+                    <CarouselItem key={card.id} className="pl-2 md:pl-4 basis-full sm:basis-[85%] md:basis-[45%] lg:basis-[35%]">
+                      <Card className={`overflow-hidden h-full transition-all duration-300 ${isCompleted ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-lg'}`}>
+                        {/* Business Header */}
+                        <div className="p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+                          <div className="flex items-center gap-3">
+                            {card.business.logo_url ? (
+                              <img
+                                src={card.business.logo_url}
+                                alt={card.business.business_name}
+                                className="w-12 h-12 rounded-full object-cover border-2 border-primary/30"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                                <Coffee className="w-6 h-6 text-white" />
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-bold truncate">{card.business.business_name}</h3>
+                              <p className="text-xs text-muted-foreground truncate">{card.business.address}</p>
                             </div>
-                          );
-                        })}
-                      </div>
+                          </div>
+                        </div>
 
-                      <div className={`flex items-center gap-2.5 text-sm p-3 rounded-xl transition-all ${
-                        isInactive 
-                          ? 'bg-muted/50 text-muted-foreground' 
-                          : 'bg-gradient-to-r from-success/15 to-success/5 text-success border border-success/20'
-                      }`}>
-                        <Gift className={`w-5 h-5 ${isCompleted ? 'animate-bounce' : ''}`} />
-                        <span className="font-semibold">{card.loyalty_program.reward_description}</span>
-                      </div>
-                    </div>
+                        {/* Card Content */}
+                        <div className={`p-4 ${isInactive ? 'opacity-70' : ''}`}>
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-sm font-semibold">
+                              {card.stamps_collected} / {card.loyalty_program.stamps_required} stamps
+                            </p>
+                            {card.has_redeemed_reward && (
+                              <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                                ✓ Redeemed
+                              </span>
+                            )}
+                            {isCompleted && (
+                              <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full animate-pulse">
+                                🎉 Ready!
+                              </span>
+                            )}
+                          </div>
+
+                          <Progress
+                            value={(card.stamps_collected / card.loyalty_program.stamps_required) * 100}
+                            className="h-2 mb-4"
+                          />
+
+                          {/* Stamp visualization */}
+                          <div className="flex gap-1.5 mb-4 flex-wrap justify-center">
+                            {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => {
+                              const isCollected = i < card.stamps_collected;
+                              return (
+                                <div
+                                  key={i}
+                                  className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm transition-all ${
+                                    isCollected
+                                      ? isInactive 
+                                        ? "bg-muted border-muted-foreground/30 text-muted-foreground"
+                                        : "bg-primary border-primary/50 text-white"
+                                      : "border-muted-foreground/20 text-muted-foreground/30"
+                                  }`}
+                                >
+                                  {isCollected ? "☕" : ""}
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className={`flex items-center gap-2 text-sm p-2 rounded-lg ${
+                            isInactive 
+                              ? 'bg-muted/50 text-muted-foreground' 
+                              : 'bg-primary/10 text-primary'
+                          }`}>
+                            <Gift className="w-4 h-4 flex-shrink-0" />
+                            <span className="font-medium truncate">{card.loyalty_program.reward_description}</span>
+                          </div>
+                        </div>
+                      </Card>
+                    </CarouselItem>
                   );
                 })}
-              </div>
-            </Card>
-          ))
+              </CarouselContent>
+              {stampCards.length > 1 && (
+                <>
+                  <CarouselPrevious className="hidden sm:flex -left-4" />
+                  <CarouselNext className="hidden sm:flex -right-4" />
+                </>
+              )}
+            </Carousel>
+            
+            {stampCards.length > 1 && (
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                Swipe to see more cards
+              </p>
+            )}
+          </div>
         )}
-        </div>
+
+        {/* Explore Shops Section */}
+        {exploreShops.length > 0 && (
+          <div>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Store className="w-5 h-5 text-primary" />
+              Explore Shops
+            </h2>
+            
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {exploreShops.map((shop) => (
+                <Card 
+                  key={shop.id} 
+                  className="p-4 hover:shadow-md transition-all cursor-pointer group"
+                  onClick={() => navigate("/customer/scan")}
+                >
+                  <div className="flex items-center gap-3">
+                    {shop.logo_url ? (
+                      <img
+                        src={shop.logo_url}
+                        alt={shop.business_name}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-border group-hover:border-primary/50 transition-colors"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-secondary/70 flex items-center justify-center group-hover:from-primary/20 group-hover:to-primary/10 transition-colors">
+                        <Coffee className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
+                        {shop.business_name}
+                      </h3>
+                      {shop.address && (
+                        <p className="text-xs text-muted-foreground truncate flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {shop.address}
+                        </p>
+                      )}
+                      {shop.loyalty_program && (
+                        <p className="text-xs text-primary mt-1">
+                          🎁 {shop.loyalty_program.reward_description}
+                        </p>
+                      )}
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Floating Scan Button */}
@@ -374,9 +473,9 @@ export default function CustomerHome() {
         <Button
           onClick={() => navigate("/customer/scan")}
           size="lg"
-          className="h-16 px-8 text-lg rounded-full shadow-2xl hover:scale-105 transition-all"
+          className="h-14 px-6 text-base rounded-full shadow-2xl hover:scale-105 transition-all"
         >
-          <QrCode className="mr-2 w-6 h-6" />
+          <QrCode className="mr-2 w-5 h-5" />
           Scan QR Code
         </Button>
       </div>

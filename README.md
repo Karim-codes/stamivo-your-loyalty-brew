@@ -1,22 +1,14 @@
-# Welcome to your Lovable project
+# Stamivo - Digital Stamp Loyalty System
 
-## Project info
+## About
 
-**URL**: https://lovable.dev/projects/f1d34bdc-d5b1-4298-b53a-1322549d126c
+Stamivo is a digital stamp loyalty system that helps coffee shops and customers manage loyalty rewards. Earn free coffees, one stamp at a time!
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/f1d34bdc-d5b1-4298-b53a-1322549d126c) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
+## How to edit this code
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,12 +54,9 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/f1d34bdc-d5b1-4298-b53a-1322549d126c) and click on Share -> Publish.
+You can deploy this project using various hosting platforms like Vercel, Netlify, or any other static site hosting service.
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+To build for production:
+```sh
+npm run build
+```

@@ -1,1 +1,7 @@
 project_id = "cowkidsfjbzaxlrlqvut"
+
+[functions.generate-redemption-code]
+verify_jwt = false
+
+[functions.verify-redemption]
+verify_jwt = false

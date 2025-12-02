@@ -140,6 +140,9 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean | null
+          max_scans_per_day: number | null
+          min_scan_interval_minutes: number | null
+          require_open_hours: boolean | null
           reward_description: string
           reward_type: string
           stamps_required: number
@@ -153,6 +156,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean | null
+          max_scans_per_day?: number | null
+          min_scan_interval_minutes?: number | null
+          require_open_hours?: boolean | null
           reward_description: string
           reward_type: string
           stamps_required?: number
@@ -166,6 +172,9 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean | null
+          max_scans_per_day?: number | null
+          min_scan_interval_minutes?: number | null
+          require_open_hours?: boolean | null
           reward_description?: string
           reward_type?: string
           stamps_required?: number
@@ -493,6 +502,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      validate_and_award_stamp: {
+        Args: { p_business_id: string; p_customer_id: string }
+        Returns: Json
       }
     }
     Enums: {

@@ -1,18 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Camera, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
+import { Camera, ArrowLeft, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
+interface ValidationResult {
+  success: boolean;
+  error?: string;
+  message: string;
+  status?: 'verified' | 'pending';
+  stamps_collected?: number;
+  stamps_required?: number;
+  is_completed?: boolean;
+  wait_minutes?: number;
+}
+
 export default function Scan() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [scanning, setScanning] = useState(false);
   const [scanned, setScanned] = useState(false);
+  const [scanResult, setScanResult] = useState<ValidationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const hasProcessedScan = useRef(false);
@@ -39,12 +51,11 @@ export default function Scan() {
   // Haptic feedback for successful scan
   const triggerHapticFeedback = () => {
     if ('vibrate' in navigator) {
-      navigator.vibrate([100, 50, 100]); // Pattern: vibrate-pause-vibrate
+      navigator.vibrate([100, 50, 100]);
     }
   };
 
   useEffect(() => {
-    // Small delay to ensure DOM is ready
     const timer = setTimeout(() => {
       startScanning();
     }, 100);
@@ -60,7 +71,6 @@ export default function Scan() {
       setError(null);
       console.log("Starting scanner initialization...");
       
-      // Make sure element exists
       const element = document.getElementById(qrCodeRegionId);
       if (!element) {
         console.error("QR reader element not found");
@@ -68,7 +78,6 @@ export default function Scan() {
         return;
       }
       
-      // Clear any existing scanner
       if (scannerRef.current) {
         try {
           const state = await scannerRef.current.getState();
@@ -82,7 +91,6 @@ export default function Scan() {
         }
       }
       
-      // Wait a bit before creating new scanner
       await new Promise(resolve => setTimeout(resolve, 100));
       
       console.log("Creating new Html5Qrcode instance...");
@@ -124,7 +132,7 @@ export default function Scan() {
     if (scannerRef.current) {
       try {
         const state = await scannerRef.current.getState();
-        if (state === 2) { // Scanner is running
+        if (state === 2) {
           await scannerRef.current.stop();
         }
         await scannerRef.current.clear();
@@ -136,17 +144,14 @@ export default function Scan() {
   };
 
   const onScanSuccess = async (decodedText: string) => {
-    // Prevent multiple scans
     if (hasProcessedScan.current) return;
     hasProcessedScan.current = true;
     
     console.log("QR Code scanned:", decodedText);
     
-    // Immediately stop scanning and show success state
     setScanned(true);
     setScanning(false);
     
-    // Stop the scanner immediately
     if (scannerRef.current) {
       try {
         const state = await scannerRef.current.getState();
@@ -160,7 +165,6 @@ export default function Scan() {
     }
 
     try {
-      // Parse QR code data (expecting format: business_id)
       const businessId = decodedText;
 
       if (!user) {
@@ -169,128 +173,70 @@ export default function Scan() {
         return;
       }
 
-      // Check daily scan limit
-      const { data: dailyCheck, error: dailyError } = await supabase.rpc('check_daily_scan_limit', {
+      // Use the new atomic validation function
+      console.log("Calling validate_and_award_stamp...");
+      const { data, error: rpcError } = await supabase.rpc('validate_and_award_stamp', {
         p_customer_id: user.id,
-        p_business_id: businessId,
-        p_max_scans_per_day: 10
+        p_business_id: businessId
       });
 
-      if (dailyError) {
-        console.error("Error checking daily limit:", dailyError);
-        throw dailyError;
+      if (rpcError) {
+        console.error("RPC error:", rpcError);
+        throw rpcError;
       }
 
-      if (!dailyCheck) {
-        toast.error("Daily scan limit reached (10 scans/day). Please try again tomorrow.");
-        setTimeout(() => navigate("/customer"), 1500);
-        return;
-      }
+      const result = data as unknown as ValidationResult;
+      console.log("Validation result:", result);
+      setScanResult(result);
 
-      // Check weekly scan limit
-      const { data: weeklyCheck, error: weeklyError } = await supabase.rpc('check_weekly_scan_limit', {
-        p_customer_id: user.id,
-        p_business_id: businessId,
-        p_max_scans_per_week: 50
-      });
-
-      if (weeklyError) {
-        console.error("Error checking weekly limit:", weeklyError);
-        throw weeklyError;
-      }
-
-      if (!weeklyCheck) {
-        toast.error("Weekly scan limit reached (50 scans/week). Please try again later.");
-        setTimeout(() => navigate("/customer"), 1500);
-        return;
-      }
-
-      // Get loyalty program details first
-      const { data: loyaltyProgram, error: programError } = await supabase
-        .from('loyalty_programs')
-        .select('stamps_required')
-        .eq('business_id', businessId)
-        .single();
-
-      if (programError || !loyaltyProgram) {
-        console.error("Error fetching loyalty program:", programError);
-        toast.error("Business loyalty program not found");
-        setTimeout(() => navigate("/customer"), 1500);
-        return;
-      }
-
-      // Get or create stamp card
-      let { data: stampCard, error: fetchError } = await supabase
-        .from('stamp_cards')
-        .select('*')
-        .eq('customer_id', user.id)
-        .eq('business_id', businessId)
-        .eq('is_completed', false)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error("Error fetching stamp card:", fetchError);
-        throw fetchError;
-      }
-
-      let stampCardId = '';
-
-      if (!stampCard) {
-        // Create new stamp card if it doesn't exist
-        const { data: newCard, error: createError } = await supabase
-          .from('stamp_cards')
-          .insert({
-            customer_id: user.id,
-            business_id: businessId,
-            stamps_collected: 0, // Start at 0, will increment on approval
-            is_completed: false
-          })
-          .select()
-          .single();
-
-        if (createError) {
-          console.error("Error creating stamp card:", createError);
-          toast.error("Failed to create stamp card. Please try again.");
-          setTimeout(() => navigate("/customer"), 1500);
-          return;
+      if (!result.success) {
+        // Handle specific error cases
+        switch (result.error) {
+          case 'TOO_SOON':
+            const waitMins = Math.ceil(result.wait_minutes || 0);
+            toast.error(`Please wait ${waitMins} more minutes before scanning again`);
+            break;
+          case 'DAILY_LIMIT':
+            toast.error("Daily stamp limit reached. Try again tomorrow!");
+            break;
+          case 'SHOP_CLOSED':
+          case 'OUTSIDE_HOURS':
+            toast.error(result.message || "Shop is currently closed for stamps");
+            break;
+          case 'NO_ACTIVE_PROGRAM':
+            toast.error("This shop doesn't have an active loyalty program");
+            break;
+          case 'INVALID_BUSINESS':
+            toast.error("Invalid QR code");
+            break;
+          default:
+            toast.error(result.message || "Failed to collect stamp");
         }
-
-        stampCardId = newCard.id;
-      } else {
-        stampCardId = stampCard.id;
-      }
-
-      // Create PENDING stamp transaction (awaiting business approval)
-      console.log("Creating pending transaction for approval:", { customer_id: user.id, business_id: businessId, stamp_card_id: stampCardId });
-      
-      const { data: transactionData, error: transactionError } = await supabase
-        .from('stamp_transactions')
-        .insert({
-          customer_id: user.id,
-          business_id: businessId,
-          stamp_card_id: stampCardId,
-          status: 'pending' // Wait for business approval
-        })
-        .select()
-        .single();
-
-      if (transactionError) {
-        console.error("Error creating pending transaction:", transactionError);
-        toast.error("Failed to submit stamp request. Please try again.");
-        setTimeout(() => navigate("/customer"), 1500);
+        setTimeout(() => navigate("/customer"), 2000);
         return;
       }
 
-      console.log("Pending transaction created successfully:", transactionData);
-
-      // Trigger haptic feedback
+      // Success!
       triggerHapticFeedback();
       playSuccessSound();
 
-      // Show success message - waiting for approval
-      toast.success("✅ Stamp request sent!", {
-        description: "Waiting for barista approval..."
-      });
+      if (result.status === 'verified') {
+        // Instant stamp awarded
+        if (result.is_completed) {
+          toast.success("🎉 Congratulations!", {
+            description: "You've earned a free reward!"
+          });
+        } else {
+          toast.success("✅ Stamp collected!", {
+            description: `${result.stamps_collected}/${result.stamps_required} stamps`
+          });
+        }
+      } else {
+        // Pending approval
+        toast.success("✅ Stamp request sent!", {
+          description: "Waiting for barista approval..."
+        });
+      }
       
       setTimeout(() => navigate("/customer"), 1500);
 
@@ -304,7 +250,29 @@ export default function Scan() {
   };
 
   const onScanFailure = (error: string) => {
-    // Silently ignore scan failures - they happen constantly while scanning
+    // Silently ignore scan failures
+  };
+
+  const getSuccessMessage = () => {
+    if (!scanResult) return { title: "Processing...", subtitle: "" };
+    
+    if (scanResult.status === 'verified') {
+      if (scanResult.is_completed) {
+        return {
+          title: "🎉 Reward Unlocked!",
+          subtitle: "You've earned a free reward!"
+        };
+      }
+      return {
+        title: "Stamp Collected!",
+        subtitle: `${scanResult.stamps_collected}/${scanResult.stamps_required} stamps`
+      };
+    }
+    
+    return {
+      title: "Request Sent!",
+      subtitle: "Waiting for approval..."
+    };
   };
 
   return (
@@ -328,16 +296,40 @@ export default function Scan() {
 
         <Card className="p-8 mb-8">
           {scanned ? (
-            <div className="aspect-square bg-success/10 rounded-lg flex items-center justify-center border-4 border-success animate-scale-in">
+            <div className={`aspect-square rounded-lg flex items-center justify-center border-4 animate-scale-in ${
+              scanResult?.success 
+                ? 'bg-success/10 border-success' 
+                : 'bg-warning/10 border-warning'
+            }`}>
               <div className="text-center">
-                <div className="relative">
-                  <CheckCircle className="w-24 h-24 mx-auto mb-4 text-success animate-scale-in" />
-                  <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full bg-success/20 animate-ping" />
-                </div>
-                <p className="text-xl font-bold text-success animate-fade-in">Stamp Collected!</p>
-                <p className="text-sm text-muted-foreground mt-2 animate-fade-in">
-                  Taking you back...
-                </p>
+                {scanResult?.success ? (
+                  <>
+                    <div className="relative">
+                      <CheckCircle className={`w-24 h-24 mx-auto mb-4 animate-scale-in ${
+                        scanResult.is_completed ? 'text-yellow-500' : 'text-success'
+                      }`} />
+                      <div className={`absolute inset-0 w-24 h-24 mx-auto rounded-full animate-ping ${
+                        scanResult.is_completed ? 'bg-yellow-500/20' : 'bg-success/20'
+                      }`} />
+                    </div>
+                    <p className="text-xl font-bold text-success animate-fade-in">
+                      {getSuccessMessage().title}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2 animate-fade-in">
+                      {getSuccessMessage().subtitle}
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Clock className="w-24 h-24 mx-auto mb-4 text-warning animate-pulse" />
+                    <p className="text-xl font-bold text-warning animate-fade-in">
+                      {scanResult?.message || "Please wait..."}
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2 animate-fade-in">
+                      Taking you back...
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           ) : error ? (
@@ -391,7 +383,7 @@ export default function Scan() {
             Make sure the QR code is clearly visible and well-lit for best results
           </p>
           <p className="text-xs text-muted-foreground">
-            Daily limit: 10 scans • Weekly limit: 50 scans
+            Stamps are awarded instantly when you scan!
           </p>
         </div>
       </div>

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Save, Plus, Trash2, Store, Clock, Coffee, Settings, Shield } from "lucide-react";
+import { ArrowLeft, Save, Plus, Trash2, Store, Clock, Coffee, Settings, Shield, Gift } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +34,11 @@ interface LoyaltySettings {
   min_scan_interval_minutes: number;
   max_scans_per_day: number;
   require_open_hours: boolean;
+  redemption_mode: string;
+  qr_expiry_seconds: number;
+  pin_expiry_seconds: number;
+  max_failed_attempts: number;
+  lockout_duration_minutes: number;
 }
 
 const defaultHours = {
@@ -75,6 +80,11 @@ export default function BusinessProfile() {
     min_scan_interval_minutes: 30,
     max_scans_per_day: 10,
     require_open_hours: false,
+    redemption_mode: 'both',
+    qr_expiry_seconds: 30,
+    pin_expiry_seconds: 120,
+    max_failed_attempts: 5,
+    lockout_duration_minutes: 15,
   });
   
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -106,7 +116,7 @@ export default function BusinessProfile() {
 
       const { data: loyalty } = await supabase
         .from('loyalty_programs')
-        .select('allow_multiple_scans, auto_verify, min_scan_interval_minutes, max_scans_per_day, require_open_hours')
+        .select('allow_multiple_scans, auto_verify, min_scan_interval_minutes, max_scans_per_day, require_open_hours, redemption_mode, qr_expiry_seconds, pin_expiry_seconds, max_failed_attempts, lockout_duration_minutes')
         .eq('business_id', business.id)
         .single();
 
@@ -117,6 +127,11 @@ export default function BusinessProfile() {
           min_scan_interval_minutes: loyalty.min_scan_interval_minutes ?? 30,
           max_scans_per_day: loyalty.max_scans_per_day ?? 10,
           require_open_hours: loyalty.require_open_hours ?? false,
+          redemption_mode: loyalty.redemption_mode ?? 'both',
+          qr_expiry_seconds: loyalty.qr_expiry_seconds ?? 30,
+          pin_expiry_seconds: loyalty.pin_expiry_seconds ?? 120,
+          max_failed_attempts: loyalty.max_failed_attempts ?? 5,
+          lockout_duration_minutes: loyalty.lockout_duration_minutes ?? 15,
         });
       }
 
@@ -162,6 +177,11 @@ export default function BusinessProfile() {
           min_scan_interval_minutes: loyaltySettings.min_scan_interval_minutes,
           max_scans_per_day: loyaltySettings.max_scans_per_day,
           require_open_hours: loyaltySettings.require_open_hours,
+          redemption_mode: loyaltySettings.redemption_mode,
+          qr_expiry_seconds: loyaltySettings.qr_expiry_seconds,
+          pin_expiry_seconds: loyaltySettings.pin_expiry_seconds,
+          max_failed_attempts: loyaltySettings.max_failed_attempts,
+          lockout_duration_minutes: loyaltySettings.lockout_duration_minutes,
         })
         .eq('business_id', businessId);
 
@@ -463,6 +483,136 @@ export default function BusinessProfile() {
                   checked={businessSettings.is_public}
                   onCheckedChange={(checked) => setBusinessSettings(prev => ({ ...prev, is_public: checked }))}
                 />
+              </div>
+            </div>
+          </Card>
+
+          {/* Reward Redemption Settings */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Gift className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-semibold">Reward Redemption</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              Configure how customers redeem their rewards
+            </p>
+            
+            <div className="space-y-6">
+              {/* Redemption Mode */}
+              <div className="space-y-2">
+                <Label>Redemption Method</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  How customers verify their reward at checkout
+                </p>
+                <Select
+                  value={loyaltySettings.redemption_mode}
+                  onValueChange={(value) => setLoyaltySettings(prev => ({ 
+                    ...prev, 
+                    redemption_mode: value 
+                  }))}
+                >
+                  <SelectTrigger className="w-full md:w-64">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="both">QR Code + PIN (Recommended)</SelectItem>
+                    <SelectItem value="qr_only">QR Code Only</SelectItem>
+                    <SelectItem value="pin_only">PIN Only</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* QR Expiry */}
+              {(loyaltySettings.redemption_mode === 'qr_only' || loyaltySettings.redemption_mode === 'both') && (
+                <div className="space-y-2">
+                  <Label>QR Code Expiry Time</Label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    How long the QR code remains valid (shorter = more secure)
+                  </p>
+                  <Select
+                    value={String(loyaltySettings.qr_expiry_seconds)}
+                    onValueChange={(value) => setLoyaltySettings(prev => ({ 
+                      ...prev, 
+                      qr_expiry_seconds: parseInt(value) 
+                    }))}
+                  >
+                    <SelectTrigger className="w-full md:w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="15">15 seconds</SelectItem>
+                      <SelectItem value="30">30 seconds (Recommended)</SelectItem>
+                      <SelectItem value="60">1 minute</SelectItem>
+                      <SelectItem value="120">2 minutes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* PIN Expiry */}
+              {(loyaltySettings.redemption_mode === 'pin_only' || loyaltySettings.redemption_mode === 'both') && (
+                <div className="space-y-2">
+                  <Label>PIN Code Expiry Time</Label>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    How long the PIN remains valid
+                  </p>
+                  <Select
+                    value={String(loyaltySettings.pin_expiry_seconds)}
+                    onValueChange={(value) => setLoyaltySettings(prev => ({ 
+                      ...prev, 
+                      pin_expiry_seconds: parseInt(value) 
+                    }))}
+                  >
+                    <SelectTrigger className="w-full md:w-64">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="60">1 minute</SelectItem>
+                      <SelectItem value="120">2 minutes (Recommended)</SelectItem>
+                      <SelectItem value="300">5 minutes</SelectItem>
+                      <SelectItem value="600">10 minutes</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Security Settings */}
+              <div className="border-t pt-6 space-y-4">
+                <h3 className="font-medium">Security Settings</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Max Failed Attempts</Label>
+                    <p className="text-sm text-muted-foreground">Before lockout</p>
+                    <Input
+                      type="number"
+                      min={3}
+                      max={10}
+                      value={loyaltySettings.max_failed_attempts}
+                      onChange={(e) => setLoyaltySettings(prev => ({ 
+                        ...prev, 
+                        max_failed_attempts: parseInt(e.target.value) || 5 
+                      }))}
+                      className="w-full md:w-32"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Lockout Duration</Label>
+                    <p className="text-sm text-muted-foreground">Minutes after max attempts</p>
+                    <Input
+                      type="number"
+                      min={5}
+                      max={60}
+                      value={loyaltySettings.lockout_duration_minutes}
+                      onChange={(e) => setLoyaltySettings(prev => ({ 
+                        ...prev, 
+                        lockout_duration_minutes: parseInt(e.target.value) || 15 
+                      }))}
+                      className="w-full md:w-32"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </Card>

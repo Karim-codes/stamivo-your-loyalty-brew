@@ -140,8 +140,13 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean | null
+          lockout_duration_minutes: number
+          max_failed_attempts: number
           max_scans_per_day: number | null
           min_scan_interval_minutes: number | null
+          pin_expiry_seconds: number
+          qr_expiry_seconds: number
+          redemption_mode: string
           require_open_hours: boolean | null
           reward_description: string
           reward_type: string
@@ -156,8 +161,13 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean | null
+          lockout_duration_minutes?: number
+          max_failed_attempts?: number
           max_scans_per_day?: number | null
           min_scan_interval_minutes?: number | null
+          pin_expiry_seconds?: number
+          qr_expiry_seconds?: number
+          redemption_mode?: string
           require_open_hours?: boolean | null
           reward_description: string
           reward_type: string
@@ -172,8 +182,13 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean | null
+          lockout_duration_minutes?: number
+          max_failed_attempts?: number
           max_scans_per_day?: number | null
           min_scan_interval_minutes?: number | null
+          pin_expiry_seconds?: number
+          qr_expiry_seconds?: number
+          redemption_mode?: string
           require_open_hours?: boolean | null
           reward_description?: string
           reward_type?: string
@@ -280,6 +295,12 @@ export type Database = {
           failed_attempts: number | null
           id: string
           is_redeemed: boolean | null
+          last_failed_at: string | null
+          lockout_until: string | null
+          pin_code: string | null
+          pin_expires_at: string | null
+          qr_expires_at: string | null
+          qr_token: string | null
           redeemed_at: string | null
           redemption_code: string
           stamp_card_id: string
@@ -294,6 +315,12 @@ export type Database = {
           failed_attempts?: number | null
           id?: string
           is_redeemed?: boolean | null
+          last_failed_at?: string | null
+          lockout_until?: string | null
+          pin_code?: string | null
+          pin_expires_at?: string | null
+          qr_expires_at?: string | null
+          qr_token?: string | null
           redeemed_at?: string | null
           redemption_code: string
           stamp_card_id: string
@@ -308,6 +335,12 @@ export type Database = {
           failed_attempts?: number | null
           id?: string
           is_redeemed?: boolean | null
+          last_failed_at?: string | null
+          lockout_until?: string | null
+          pin_code?: string | null
+          pin_expires_at?: string | null
+          qr_expires_at?: string | null
+          qr_token?: string | null
           redeemed_at?: string | null
           redemption_code?: string
           stamp_card_id?: string

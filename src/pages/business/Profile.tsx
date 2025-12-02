@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, Plus, Trash2, Store, Clock, Coffee, Settings } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ArrowLeft, Save, Plus, Trash2, Store, Clock, Coffee, Settings, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -30,6 +31,9 @@ interface BusinessSettings {
 interface LoyaltySettings {
   allow_multiple_scans: boolean;
   auto_verify: boolean;
+  min_scan_interval_minutes: number;
+  max_scans_per_day: number;
+  require_open_hours: boolean;
 }
 
 const defaultHours = {
@@ -41,6 +45,15 @@ const defaultHours = {
   saturday: { open: "10:00", close: "16:00", closed: false },
   sunday: { open: "10:00", close: "16:00", closed: true },
 };
+
+const intervalOptions = [
+  { value: "5", label: "5 minutes" },
+  { value: "15", label: "15 minutes" },
+  { value: "30", label: "30 minutes" },
+  { value: "60", label: "1 hour" },
+  { value: "120", label: "2 hours" },
+  { value: "1440", label: "24 hours (once per day)" },
+];
 
 export default function BusinessProfile() {
   const { user } = useAuth();
@@ -59,6 +72,9 @@ export default function BusinessProfile() {
   const [loyaltySettings, setLoyaltySettings] = useState<LoyaltySettings>({
     allow_multiple_scans: false,
     auto_verify: true,
+    min_scan_interval_minutes: 30,
+    max_scans_per_day: 10,
+    require_open_hours: false,
   });
   
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -72,7 +88,6 @@ export default function BusinessProfile() {
 
   const fetchBusinessData = async () => {
     try {
-      // Fetch business details
       const { data: business, error: businessError } = await supabase
         .from('businesses')
         .select('*')
@@ -89,10 +104,9 @@ export default function BusinessProfile() {
         is_public: business.is_public ?? true,
       });
 
-      // Fetch loyalty program
       const { data: loyalty } = await supabase
         .from('loyalty_programs')
-        .select('allow_multiple_scans, auto_verify')
+        .select('allow_multiple_scans, auto_verify, min_scan_interval_minutes, max_scans_per_day, require_open_hours')
         .eq('business_id', business.id)
         .single();
 
@@ -100,10 +114,12 @@ export default function BusinessProfile() {
         setLoyaltySettings({
           allow_multiple_scans: loyalty.allow_multiple_scans ?? false,
           auto_verify: loyalty.auto_verify ?? true,
+          min_scan_interval_minutes: loyalty.min_scan_interval_minutes ?? 30,
+          max_scans_per_day: loyalty.max_scans_per_day ?? 10,
+          require_open_hours: loyalty.require_open_hours ?? false,
         });
       }
 
-      // Fetch menu items
       const { data: menu } = await supabase
         .from('menu_items')
         .select('*')
@@ -126,7 +142,6 @@ export default function BusinessProfile() {
     
     setSaving(true);
     try {
-      // Update business
       const { error: businessError } = await supabase
         .from('businesses')
         .update({
@@ -139,12 +154,14 @@ export default function BusinessProfile() {
 
       if (businessError) throw businessError;
 
-      // Update loyalty program
       const { error: loyaltyError } = await supabase
         .from('loyalty_programs')
         .update({
           allow_multiple_scans: loyaltySettings.allow_multiple_scans,
           auto_verify: loyaltySettings.auto_verify,
+          min_scan_interval_minutes: loyaltySettings.min_scan_interval_minutes,
+          max_scans_per_day: loyaltySettings.max_scans_per_day,
+          require_open_hours: loyaltySettings.require_open_hours,
         })
         .eq('business_id', businessId);
 
@@ -329,18 +346,107 @@ export default function BusinessProfile() {
             </div>
           </Card>
 
-          {/* Loyalty Settings */}
+          {/* Scan & Stamp Settings */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Shield className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-semibold">Scan & Stamp Settings</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              Configure how customers collect stamps at your shop
+            </p>
+            
+            <div className="space-y-6">
+              {/* Instant Stamps Toggle */}
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="font-medium">Instant Stamps</p>
+                  <p className="text-sm text-muted-foreground">
+                    Award stamps immediately when customers scan (no staff approval needed)
+                  </p>
+                </div>
+                <Switch
+                  checked={loyaltySettings.auto_verify}
+                  onCheckedChange={(checked) => setLoyaltySettings(prev => ({ ...prev, auto_verify: checked }))}
+                />
+              </div>
+
+              {/* Minimum Scan Interval */}
+              <div className="space-y-2">
+                <Label>Minimum time between scans</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Prevents customers from scanning multiple times in quick succession
+                </p>
+                <Select
+                  value={String(loyaltySettings.min_scan_interval_minutes)}
+                  onValueChange={(value) => setLoyaltySettings(prev => ({ 
+                    ...prev, 
+                    min_scan_interval_minutes: parseInt(value) 
+                  }))}
+                >
+                  <SelectTrigger className="w-full md:w-64">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {intervalOptions.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Max Scans Per Day */}
+              <div className="space-y-2">
+                <Label htmlFor="max_scans">Maximum stamps per day</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Limit how many stamps a customer can earn per day at your shop
+                </p>
+                <Input
+                  id="max_scans"
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={loyaltySettings.max_scans_per_day}
+                  onChange={(e) => setLoyaltySettings(prev => ({ 
+                    ...prev, 
+                    max_scans_per_day: parseInt(e.target.value) || 10 
+                  }))}
+                  className="w-full md:w-64"
+                />
+              </div>
+
+              {/* Opening Hours Restriction */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Only allow stamps during opening hours</p>
+                  <p className="text-sm text-muted-foreground">
+                    Customers can only collect stamps when your shop is open
+                  </p>
+                </div>
+                <Switch
+                  checked={loyaltySettings.require_open_hours}
+                  onCheckedChange={(checked) => setLoyaltySettings(prev => ({ ...prev, require_open_hours: checked }))}
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Additional Loyalty Settings */}
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-4">
               <Settings className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-semibold">Loyalty Program Settings</h2>
+              <h2 className="text-xl font-semibold">Additional Settings</h2>
             </div>
             
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Allow multiple scans per visit</p>
-                  <p className="text-sm text-muted-foreground">Customers can scan once per visit</p>
+                  <p className="text-sm text-muted-foreground">
+                    Let customers earn multiple stamps in one visit (e.g., for multiple drinks)
+                  </p>
                 </div>
                 <Switch
                   checked={loyaltySettings.allow_multiple_scans}
@@ -350,19 +456,8 @@ export default function BusinessProfile() {
               
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Auto-verify reward redemptions</p>
-                  <p className="text-sm text-muted-foreground">Automatically approve when customers redeem</p>
-                </div>
-                <Switch
-                  checked={loyaltySettings.auto_verify}
-                  onCheckedChange={(checked) => setLoyaltySettings(prev => ({ ...prev, auto_verify: checked }))}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Show shop publicly on the app</p>
-                  <p className="text-sm text-muted-foreground">Let customers discover your shop</p>
+                  <p className="font-medium">Show shop publicly</p>
+                  <p className="text-sm text-muted-foreground">Let customers discover your shop in the app</p>
                 </div>
                 <Switch
                   checked={businessSettings.is_public}

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Gift, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Gift, CheckCircle2, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,6 +46,11 @@ interface RedemptionCode {
   redeemed_at: string | null;
   business_id: string;
   business_name: string;
+  qr_token: string | null;
+  pin_code: string | null;
+  qr_expires_at: string | null;
+  pin_expires_at: string | null;
+  stamp_card_id: string;
 }
 
 export default function Redeem() {
@@ -173,7 +178,7 @@ export default function Redeem() {
 
       setCompletedCards(cardsWithPrograms);
 
-      // Fetch redemption codes
+      // Fetch redemption codes with QR/PIN data
       const { data: codesData, error: codesError } = await supabase
         .from('rewards_redeemed')
         .select(`
@@ -183,6 +188,11 @@ export default function Redeem() {
           is_redeemed,
           redeemed_at,
           business_id,
+          qr_token,
+          pin_code,
+          qr_expires_at,
+          pin_expires_at,
+          stamp_card_id,
           businesses!inner (
             business_name
           )
@@ -199,7 +209,12 @@ export default function Redeem() {
         is_redeemed: code.is_redeemed,
         redeemed_at: code.redeemed_at,
         business_id: code.business_id,
-        business_name: code.businesses.business_name
+        business_name: code.businesses.business_name,
+        qr_token: code.qr_token,
+        pin_code: code.pin_code,
+        qr_expires_at: code.qr_expires_at,
+        pin_expires_at: code.pin_expires_at,
+        stamp_card_id: code.stamp_card_id,
       }));
 
       setRedemptionCodes(formattedCodes);
@@ -361,6 +376,68 @@ export default function Redeem() {
                 Claim your completed stamp cards for rewards
               </p>
             </div>
+
+            {/* Active Codes Section - shows unredeemed codes with valid QR/PIN */}
+            {redemptionCodes.filter(code => !code.is_redeemed && code.qr_token && code.pin_code).length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-xl font-semibold mb-4">Active Codes</h2>
+                <div className="space-y-4">
+                  {redemptionCodes
+                    .filter(code => !code.is_redeemed && code.qr_token && code.pin_code)
+                    .map((code) => {
+                      const qrExpired = code.qr_expires_at ? new Date(code.qr_expires_at) < new Date() : true;
+                      const pinExpired = code.pin_expires_at ? new Date(code.pin_expires_at) < new Date() : true;
+                      const allExpired = qrExpired && pinExpired;
+
+                      return (
+                        <Card key={code.id} className="p-6 border-2 border-primary">
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <h3 className="font-semibold text-lg">{code.business_name}</h3>
+                              {allExpired && (
+                                <Badge variant="destructive" className="mt-1">Codes Expired</Badge>
+                              )}
+                            </div>
+                            <Gift className="w-6 h-6 text-primary" />
+                          </div>
+                          
+                          {allExpired ? (
+                            <Button
+                              onClick={() => {
+                                // Find the stamp card for this code and regenerate
+                                const card = completedCards.find(c => c.business.id === code.business_id);
+                                if (card) {
+                                  generateRedemptionCode(card.id, code.business_id, code.business_name);
+                                }
+                              }}
+                              disabled={generating !== null}
+                              className="w-full"
+                            >
+                              <RefreshCw className={`w-4 h-4 mr-2 ${generating ? 'animate-spin' : ''}`} />
+                              Generate New Codes
+                            </Button>
+                          ) : (
+                            <RedemptionQRCode
+                              qrToken={code.qr_token!}
+                              pinCode={code.pin_code!}
+                              qrExpiresAt={code.qr_expires_at!}
+                              pinExpiresAt={code.pin_expires_at!}
+                              redemptionMode="both"
+                              onRefresh={() => {
+                                const card = completedCards.find(c => c.business.id === code.business_id);
+                                if (card) {
+                                  generateRedemptionCode(card.id, code.business_id, code.business_name);
+                                }
+                              }}
+                              refreshing={generating !== null}
+                            />
+                          )}
+                        </Card>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
 
             {/* Completed Cards Available for Redemption */}
             <div className="mb-8">

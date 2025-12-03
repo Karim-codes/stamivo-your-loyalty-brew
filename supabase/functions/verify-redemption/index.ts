@@ -46,53 +46,14 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Verifying redemption - type: ${verification_type}, code: ${code.slice(0, 8)}...`);
+    console.log(`Verifying redemption - type: ${verification_type}, code: ${code.slice(0, 8)}..., user: ${user.id}`);
 
-    // Get business owned by this user
-    const { data: business, error: businessError } = await supabase
-      .from('businesses')
-      .select('id')
-      .eq('owner_id', user.id)
-      .single();
-
-    if (businessError || !business) {
-      console.error('Business error:', businessError);
-      return new Response(
-        JSON.stringify({ error: 'Business not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get loyalty program settings
-    const { data: loyaltyProgram } = await supabase
-      .from('loyalty_programs')
-      .select('redemption_mode, max_failed_attempts, lockout_duration_minutes')
-      .eq('business_id', business.id)
-      .single();
-
-    const redemptionMode = loyaltyProgram?.redemption_mode || 'both';
-    const maxFailedAttempts = loyaltyProgram?.max_failed_attempts || 5;
-    const lockoutDurationMinutes = loyaltyProgram?.lockout_duration_minutes || 15;
-
-    // Validate verification type against business settings
-    if (redemptionMode === 'qr_only' && verification_type === 'pin') {
-      return new Response(
-        JSON.stringify({ error: 'PIN verification not enabled for this business' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    if (redemptionMode === 'pin_only' && verification_type === 'qr') {
-      return new Response(
-        JSON.stringify({ error: 'QR verification not enabled for this business' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Search for redemption based on verification type
+    // Step 1: Find the redemption by code FIRST (without business filter)
     let redemptionQuery = supabase
       .from('rewards_redeemed')
       .select(`
         id,
+        business_id,
         is_redeemed,
         qr_token,
         pin_code,
@@ -105,7 +66,6 @@ serve(async (req) => {
         customer_id,
         stamp_card_id
       `)
-      .eq('business_id', business.id)
       .eq('is_redeemed', false);
 
     if (verification_type === 'qr') {
@@ -125,28 +85,58 @@ serve(async (req) => {
     }
 
     if (!redemption) {
-      // Track failed attempt (find any pending redemption for this business)
-      const { data: anyPending } = await supabase
-        .from('rewards_redeemed')
-        .select('id, failed_attempts')
-        .eq('business_id', business.id)
-        .eq('is_redeemed', false)
-        .limit(1)
-        .maybeSingle();
-
-      if (anyPending) {
-        await supabase
-          .from('rewards_redeemed')
-          .update({
-            failed_attempts: (anyPending.failed_attempts || 0) + 1,
-            last_failed_at: new Date().toISOString(),
-          })
-          .eq('id', anyPending.id);
-      }
-
+      console.log('No redemption found for code');
       return new Response(
         JSON.stringify({ error: 'Invalid code', code: 'INVALID_CODE' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log(`Found redemption ${redemption.id} for business ${redemption.business_id}`);
+
+    // Step 2: Verify the authenticated user owns this business
+    const { data: business, error: businessError } = await supabase
+      .from('businesses')
+      .select('id')
+      .eq('id', redemption.business_id)
+      .eq('owner_id', user.id)
+      .maybeSingle();
+
+    if (businessError) {
+      console.error('Business verification error:', businessError);
+      throw businessError;
+    }
+
+    if (!business) {
+      console.log(`User ${user.id} is not the owner of business ${redemption.business_id}`);
+      return new Response(
+        JSON.stringify({ error: 'Not authorized to verify this redemption', code: 'UNAUTHORIZED' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Step 3: Get loyalty program settings for this specific business
+    const { data: loyaltyProgram } = await supabase
+      .from('loyalty_programs')
+      .select('redemption_mode, max_failed_attempts, lockout_duration_minutes')
+      .eq('business_id', business.id)
+      .maybeSingle();
+
+    const redemptionMode = loyaltyProgram?.redemption_mode || 'both';
+    const maxFailedAttempts = loyaltyProgram?.max_failed_attempts || 5;
+    const lockoutDurationMinutes = loyaltyProgram?.lockout_duration_minutes || 15;
+
+    // Validate verification type against business settings
+    if (redemptionMode === 'qr_only' && verification_type === 'pin') {
+      return new Response(
+        JSON.stringify({ error: 'PIN verification not enabled for this business' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    if (redemptionMode === 'pin_only' && verification_type === 'qr') {
+      return new Response(
+        JSON.stringify({ error: 'QR verification not enabled for this business' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 

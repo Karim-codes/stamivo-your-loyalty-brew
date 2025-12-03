@@ -40,6 +40,15 @@ interface PendingRequest {
   customerId: string;
 }
 
+interface CustomerData {
+  id: string;
+  name: string;
+  email: string;
+  stampsCollected: number;
+  isCompleted: boolean;
+  joinedAt: string;
+}
+
 export default function Dashboard() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -52,6 +61,7 @@ export default function Dashboard() {
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [pendingRequests, setPendingRequests] = useState<PendingRequest[]>([]);
+  const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingRequest, setProcessingRequest] = useState<string | null>(null);
 
@@ -66,6 +76,7 @@ export default function Dashboard() {
       fetchDashboardStats();
       fetchRecentActivity();
       fetchPendingRequests();
+      fetchCustomers();
     }
   }, [user]);
 
@@ -269,6 +280,66 @@ export default function Dashboard() {
       setPendingRequests(requests);
     } catch (error) {
       console.error('Error fetching pending requests:', error);
+    }
+  };
+
+  const fetchCustomers = async () => {
+    try {
+      if (!user) return;
+
+      const { data: businesses } = await supabase
+        .from('businesses')
+        .select('id')
+        .eq('owner_id', user.id)
+        .limit(1);
+
+      if (!businesses || businesses.length === 0) return;
+
+      const businessId = businesses[0].id;
+
+      // Fetch all stamp cards with customer profiles
+      const { data: stampCards } = await supabase
+        .from('stamp_cards')
+        .select(`
+          id,
+          customer_id,
+          stamps_collected,
+          is_completed,
+          created_at,
+          profiles!stamp_cards_customer_id_fkey (
+            full_name,
+            email
+          )
+        `)
+        .eq('business_id', businessId)
+        .order('created_at', { ascending: false });
+
+      // Aggregate by customer (a customer might have multiple stamp cards)
+      const customerMap = new Map<string, CustomerData>();
+      
+      stampCards?.forEach((card: any) => {
+        const customerId = card.customer_id;
+        const existing = customerMap.get(customerId);
+        
+        if (existing) {
+          // Sum stamps across all cards
+          existing.stampsCollected += card.stamps_collected;
+          existing.isCompleted = existing.isCompleted || card.is_completed;
+        } else {
+          customerMap.set(customerId, {
+            id: customerId,
+            name: card.profiles?.full_name || 'Unknown',
+            email: card.profiles?.email || '',
+            stampsCollected: card.stamps_collected,
+            isCompleted: card.is_completed || false,
+            joinedAt: card.created_at
+          });
+        }
+      });
+
+      setCustomers(Array.from(customerMap.values()));
+    } catch (error) {
+      console.error('Error fetching customers:', error);
     }
   };
 
@@ -555,6 +626,72 @@ export default function Dashboard() {
                 </div>
               </Card>
             )}
+
+            {/* Customers Table */}
+            <Card className="p-4 md:p-8 mb-6">
+              <h2 className="text-lg md:text-xl font-semibold mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                My Customers
+                <span className="ml-2 px-2 py-1 text-xs bg-muted text-muted-foreground rounded-full">
+                  {customers.length}
+                </span>
+              </h2>
+              {customers.length === 0 ? (
+                <p className="text-muted-foreground text-center py-6 md:py-8 text-sm">
+                  No customers yet. Share your QR code to start building your customer base!
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground">Customer</th>
+                        <th className="text-left py-3 px-2 text-sm font-medium text-muted-foreground hidden sm:table-cell">Email</th>
+                        <th className="text-center py-3 px-2 text-sm font-medium text-muted-foreground">Stamps</th>
+                        <th className="text-center py-3 px-2 text-sm font-medium text-muted-foreground hidden sm:table-cell">Joined</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customers.map((customer) => (
+                        <tr key={customer.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                          <td className="py-3 px-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                                <span className="text-xs font-medium text-primary">
+                                  {customer.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium truncate">{customer.name}</p>
+                                <p className="text-xs text-muted-foreground sm:hidden truncate">{customer.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-2 hidden sm:table-cell">
+                            <span className="text-sm text-muted-foreground">{customer.email}</span>
+                          </td>
+                          <td className="py-3 px-2 text-center">
+                            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                              customer.isCompleted 
+                                ? 'bg-success/20 text-success' 
+                                : 'bg-primary/20 text-primary'
+                            }`}>
+                              <Coffee className="w-3 h-3" />
+                              {customer.stampsCollected}
+                            </span>
+                          </td>
+                          <td className="py-3 px-2 text-center hidden sm:table-cell">
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(customer.joinedAt), 'MMM d, yyyy')}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </Card>
 
             <Card className="p-4 md:p-8">
               <h2 className="text-lg md:text-xl font-semibold mb-4">Recent Activity</h2>

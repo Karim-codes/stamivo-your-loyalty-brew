@@ -131,6 +131,45 @@ export type Database = {
           },
         ]
       }
+      customer_memberships: {
+        Row: {
+          business_id: string
+          created_at: string
+          customer_id: string
+          id: string
+          is_active: boolean | null
+          joined_at: string
+          last_visit_at: string | null
+          total_rewards_redeemed: number | null
+          total_stamps_earned: number | null
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          customer_id: string
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string
+          last_visit_at?: string | null
+          total_rewards_redeemed?: number | null
+          total_stamps_earned?: number | null
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          customer_id?: string
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string
+          last_visit_at?: string | null
+          total_rewards_redeemed?: number | null
+          total_stamps_earned?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       loyalty_programs: {
         Row: {
           allow_multiple_scans: boolean | null

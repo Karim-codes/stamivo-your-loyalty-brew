@@ -229,9 +229,9 @@ export default function Redeem() {
   const generateRedemptionCode = async (stampCardId: string, businessId: string, businessName: string) => {
     if (!user || !session) return;
 
-    // Check if this stamp card already has been redeemed
+    // Check if this specific stamp card already has been redeemed
     const existingRedeemed = redemptionCodes.find(
-      code => code.business_id === businessId && code.is_redeemed
+      code => code.stamp_card_id === stampCardId && code.is_redeemed
     );
 
     if (existingRedeemed) {
@@ -380,6 +380,11 @@ export default function Redeem() {
             {/* Active Codes Section - shows unredeemed codes with VALID (non-expired) QR/PIN only */}
             {redemptionCodes.filter(code => {
               if (code.is_redeemed) return false;
+              // Exclude if ANY code for this stamp_card has been redeemed
+              const stampCardAlreadyRedeemed = redemptionCodes.some(
+                c => c.stamp_card_id === code.stamp_card_id && c.is_redeemed
+              );
+              if (stampCardAlreadyRedeemed) return false;
               if (!code.qr_token || !code.pin_code) return false;
               const qrExpired = code.qr_expires_at ? new Date(code.qr_expires_at) < new Date() : true;
               const pinExpired = code.pin_expires_at ? new Date(code.pin_expires_at) < new Date() : true;
@@ -392,6 +397,11 @@ export default function Redeem() {
                   {redemptionCodes
                     .filter(code => {
                       if (code.is_redeemed) return false;
+                      // Exclude if ANY code for this stamp_card has been redeemed
+                      const stampCardAlreadyRedeemed = redemptionCodes.some(
+                        c => c.stamp_card_id === code.stamp_card_id && c.is_redeemed
+                      );
+                      if (stampCardAlreadyRedeemed) return false;
                       if (!code.qr_token || !code.pin_code) return false;
                       const qrExpired = code.qr_expires_at ? new Date(code.qr_expires_at) < new Date() : true;
                       const pinExpired = code.pin_expires_at ? new Date(code.pin_expires_at) < new Date() : true;
@@ -426,101 +436,88 @@ export default function Redeem() {
               </div>
             )}
 
-            {/* Completed Cards Available for Redemption */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold mb-4">Available Rewards</h2>
-              {completedCards.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <Gift className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground mb-2">No rewards available yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    Complete stamp cards to unlock rewards
-                  </p>
-                  <Button 
-                    onClick={() => navigate("/customer")} 
-                    className="mt-4"
-                  >
-                    View Stamp Cards
-                  </Button>
-                </Card>
-              ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                  {completedCards.map((card) => {
-                    // Check by stamp_card_id to correctly handle multiple completed cards at same business
-                    const hasBeenRedeemed = redemptionCodes.some(
-                      code => code.stamp_card_id === card.id && code.is_redeemed
-                    );
-                    
-                    const redeemedRecord = redemptionCodes.find(
-                      code => code.stamp_card_id === card.id && code.is_redeemed
-                    );
+            {/* Completed Cards Available for Redemption - Only show unredeemed cards */}
+            {(() => {
+              const unredeemedCards = completedCards.filter(card => {
+                const hasBeenRedeemed = redemptionCodes.some(
+                  code => code.stamp_card_id === card.id && code.is_redeemed
+                );
+                return !hasBeenRedeemed;
+              });
 
-                    return (
-                      <Card key={card.id} className="p-6">
-                        <div className="flex items-start gap-4 mb-4">
-                          {card.business.logo_url ? (
-                            <img 
-                              src={card.business.logo_url} 
-                              alt={card.business.business_name}
-                              className="w-12 h-12 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Gift className="w-6 h-6 text-primary" />
+              return (
+                <div className="mb-8">
+                  <h2 className="text-xl font-semibold mb-4">Available Rewards</h2>
+                  {unredeemedCards.length === 0 ? (
+                    <Card className="p-8 text-center">
+                      <Gift className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-muted-foreground mb-2">No rewards available yet</p>
+                      <p className="text-sm text-muted-foreground">
+                        Complete stamp cards to unlock rewards
+                      </p>
+                      <Button 
+                        onClick={() => navigate("/customer")} 
+                        className="mt-4"
+                      >
+                        View Stamp Cards
+                      </Button>
+                    </Card>
+                  ) : (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {unredeemedCards.map((card) => (
+                        <Card key={card.id} className="p-6">
+                          <div className="flex items-start gap-4 mb-4">
+                            {card.business.logo_url ? (
+                              <img 
+                                src={card.business.logo_url} 
+                                alt={card.business.business_name}
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                <Gift className="w-6 h-6 text-primary" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <h3 className="font-semibold">{card.business.business_name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {card.loyalty_program.reward_description}
+                              </p>
                             </div>
-                          )}
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{card.business.business_name}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {card.loyalty_program.reward_description}
-                            </p>
                           </div>
-                        </div>
 
-                        <div className="bg-green-500/10 rounded-lg p-3 mb-4 flex items-center justify-center gap-2">
-                          <CheckCircle2 className="w-5 h-5 text-green-600" />
-                          <span className="text-sm font-medium text-green-600">
-                            {card.stamps_collected}/{card.loyalty_program.stamps_required} stamps completed
-                          </span>
-                        </div>
-
-                        {hasBeenRedeemed ? (
-                          <div className="text-center py-3 px-4 bg-muted rounded-lg">
-                            <p className="text-sm text-muted-foreground mb-1">
-                              Redeemed on
-                            </p>
-                            <p className="text-sm font-medium">
-                              {redeemedRecord?.redeemed_at && format(new Date(redeemedRecord.redeemed_at), 'PPp')}
-                            </p>
+                          <div className="bg-green-500/10 rounded-lg p-3 mb-4 flex items-center justify-center gap-2">
+                            <CheckCircle2 className="w-5 h-5 text-green-600" />
+                            <span className="text-sm font-medium text-green-600">
+                              {card.stamps_collected}/{card.loyalty_program.stamps_required} stamps completed
+                            </span>
                           </div>
-                        ) : (
-                          <>
-                            <Button
-                              onClick={() => generateRedemptionCode(card.id, card.business.id, card.business.business_name)}
-                              disabled={generating === card.id}
-                              className="w-full"
-                            >
-                              {generating === card.id ? (
-                                <span className="flex items-center gap-2">
-                                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                  Generating...
-                                </span>
-                              ) : (
-                                "Redeem Reward"
-                              )}
-                            </Button>
 
-                            <p className="text-xs text-muted-foreground text-center mt-2">
-                              Completed {format(new Date(card.completed_at), 'PPP')}
-                            </p>
-                          </>
-                        )}
-                      </Card>
-                    );
-                  })}
+                          <Button
+                            onClick={() => generateRedemptionCode(card.id, card.business.id, card.business.business_name)}
+                            disabled={generating === card.id}
+                            className="w-full"
+                          >
+                            {generating === card.id ? (
+                              <span className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Generating...
+                              </span>
+                            ) : (
+                              "Redeem Reward"
+                            )}
+                          </Button>
+
+                          <p className="text-xs text-muted-foreground text-center mt-2">
+                            Completed {format(new Date(card.completed_at), 'PPP')}
+                          </p>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Redeemed Codes History */}
             {redemptionCodes.some(code => code.is_redeemed) && (

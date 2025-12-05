@@ -377,64 +377,51 @@ export default function Redeem() {
               </p>
             </div>
 
-            {/* Active Codes Section - shows unredeemed codes with valid QR/PIN */}
-            {redemptionCodes.filter(code => !code.is_redeemed && code.qr_token && code.pin_code).length > 0 && (
+            {/* Active Codes Section - shows unredeemed codes with VALID (non-expired) QR/PIN only */}
+            {redemptionCodes.filter(code => {
+              if (code.is_redeemed) return false;
+              if (!code.qr_token || !code.pin_code) return false;
+              const qrExpired = code.qr_expires_at ? new Date(code.qr_expires_at) < new Date() : true;
+              const pinExpired = code.pin_expires_at ? new Date(code.pin_expires_at) < new Date() : true;
+              // Only show if at least one code is still valid
+              return !qrExpired || !pinExpired;
+            }).length > 0 && (
               <div className="mb-8">
                 <h2 className="text-xl font-semibold mb-4">Active Codes</h2>
                 <div className="space-y-4">
                   {redemptionCodes
-                    .filter(code => !code.is_redeemed && code.qr_token && code.pin_code)
-                    .map((code) => {
+                    .filter(code => {
+                      if (code.is_redeemed) return false;
+                      if (!code.qr_token || !code.pin_code) return false;
                       const qrExpired = code.qr_expires_at ? new Date(code.qr_expires_at) < new Date() : true;
                       const pinExpired = code.pin_expires_at ? new Date(code.pin_expires_at) < new Date() : true;
-                      const allExpired = qrExpired && pinExpired;
-
-                      return (
-                        <Card key={code.id} className="p-6 border-2 border-primary">
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h3 className="font-semibold text-lg">{code.business_name}</h3>
-                              {allExpired && (
-                                <Badge variant="destructive" className="mt-1">Codes Expired</Badge>
-                              )}
-                            </div>
-                            <Gift className="w-6 h-6 text-primary" />
+                      return !qrExpired || !pinExpired;
+                    })
+                    .map((code) => (
+                      <Card key={code.id} className="p-6 border-2 border-primary">
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <h3 className="font-semibold text-lg">{code.business_name}</h3>
                           </div>
-                          
-                          {allExpired ? (
-                            <Button
-                              onClick={() => {
-                                // Find the stamp card for this code and regenerate
-                                const card = completedCards.find(c => c.business.id === code.business_id);
-                                if (card) {
-                                  generateRedemptionCode(card.id, code.business_id, code.business_name);
-                                }
-                              }}
-                              disabled={generating !== null}
-                              className="w-full"
-                            >
-                              <RefreshCw className={`w-4 h-4 mr-2 ${generating ? 'animate-spin' : ''}`} />
-                              Generate New Codes
-                            </Button>
-                          ) : (
-                            <RedemptionQRCode
-                              qrToken={code.qr_token!}
-                              pinCode={code.pin_code!}
-                              qrExpiresAt={code.qr_expires_at!}
-                              pinExpiresAt={code.pin_expires_at!}
-                              redemptionMode="both"
-                              onRefresh={() => {
-                                const card = completedCards.find(c => c.business.id === code.business_id);
-                                if (card) {
-                                  generateRedemptionCode(card.id, code.business_id, code.business_name);
-                                }
-                              }}
-                              refreshing={generating !== null}
-                            />
-                          )}
-                        </Card>
-                      );
-                    })}
+                          <Gift className="w-6 h-6 text-primary" />
+                        </div>
+                        
+                        <RedemptionQRCode
+                          qrToken={code.qr_token!}
+                          pinCode={code.pin_code!}
+                          qrExpiresAt={code.qr_expires_at!}
+                          pinExpiresAt={code.pin_expires_at!}
+                          redemptionMode="both"
+                          onRefresh={() => {
+                            const card = completedCards.find(c => c.business.id === code.business_id);
+                            if (card) {
+                              generateRedemptionCode(card.id, code.business_id, code.business_name);
+                            }
+                          }}
+                          refreshing={generating !== null}
+                        />
+                      </Card>
+                    ))}
                 </div>
               </div>
             )}
@@ -457,14 +444,15 @@ export default function Redeem() {
                   </Button>
                 </Card>
               ) : (
-                <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2">
                   {completedCards.map((card) => {
+                    // Check by stamp_card_id to correctly handle multiple completed cards at same business
                     const hasBeenRedeemed = redemptionCodes.some(
-                      code => code.business_id === card.business.id && code.is_redeemed
+                      code => code.stamp_card_id === card.id && code.is_redeemed
                     );
                     
                     const redeemedRecord = redemptionCodes.find(
-                      code => code.business_id === card.business.id && code.is_redeemed
+                      code => code.stamp_card_id === card.id && code.is_redeemed
                     );
 
                     return (

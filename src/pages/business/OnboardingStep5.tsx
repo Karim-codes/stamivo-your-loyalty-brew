@@ -18,6 +18,7 @@ export default function OnboardingStep5({ formData }: OnboardingStep5Props) {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const navigate = useNavigate();
@@ -91,7 +92,7 @@ export default function OnboardingStep5({ formData }: OnboardingStep5Props) {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signUp(email, password, 'business');
+    const { error } = await signUp(email, password, 'business', fullName);
     if (error) {
       toast.error(error.message);
       setLoading(false);
@@ -170,6 +171,18 @@ export default function OnboardingStep5({ formData }: OnboardingStep5Props) {
           </>
         ) : (
           <form onSubmit={handleEmailSignUp} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

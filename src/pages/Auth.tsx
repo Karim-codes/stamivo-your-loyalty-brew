@@ -13,6 +13,7 @@ export default function Auth() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
   const { signUp, signIn } = useAuth();
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export default function Auth() {
     setLoading(true);
 
     if (isSignUp) {
-      const { error } = await signUp(email, password, 'customer');
+      const { error } = await signUp(email, password, 'customer', fullName);
       if (error) {
         toast.error(error.message);
         setLoading(false);
@@ -89,6 +90,20 @@ export default function Auth() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {isSignUp && (
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                type="text"
+                placeholder="John Doe"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                required
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

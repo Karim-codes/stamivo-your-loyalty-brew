@@ -56,7 +56,8 @@ export default function CustomerHome() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signOut } = useAuth();
-  const [stampCards, setStampCards] = useState<StampCard[]>([]);
+  const [activeCards, setActiveCards] = useState<StampCard[]>([]);
+  const [completedCards, setCompletedCards] = useState<StampCard[]>([]);
   const [exploreShops, setExploreShops] = useState<ExploreBusiness[]>([]);
   const [loading, setLoading] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -146,7 +147,12 @@ export default function CustomerHome() {
         })
       );
 
-      setStampCards(cardsWithPrograms);
+      // Separate into active and completed cards
+      const active = cardsWithPrograms.filter(card => !card.is_completed);
+      const completed = cardsWithPrograms.filter(card => card.is_completed);
+      
+      setActiveCards(active);
+      setCompletedCards(completed);
     } catch (error: any) {
       console.error('Error fetching stamp cards:', error);
       toast.error("Failed to load your stamp cards");
@@ -269,7 +275,7 @@ export default function CustomerHome() {
           </DropdownMenu>
         </div>
 
-        {stampCards.some(card => card.is_completed && !card.has_redeemed_reward) && (
+        {completedCards.some(card => !card.has_redeemed_reward) && (
           <Button 
             onClick={() => navigate("/customer/redeem")}
             variant="secondary"
@@ -284,8 +290,8 @@ export default function CustomerHome() {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6 space-y-8">
         
-        {/* My Cards Section - Carousel */}
-        {stampCards.length === 0 ? (
+        {/* My Cards Section - Active Cards Carousel */}
+        {activeCards.length === 0 && completedCards.length === 0 ? (
           <Card className="p-8 text-center space-y-4">
             <Coffee className="w-16 h-16 mx-auto text-muted-foreground" />
             <div>
@@ -300,120 +306,222 @@ export default function CustomerHome() {
             </Button>
           </Card>
         ) : (
-          <div>
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Coffee className="w-5 h-5 text-primary" />
-              My Loyalty Cards
-            </h2>
-            
-            <Carousel
-              opts={{
-                align: "start",
-                loop: stampCards.length > 1,
-              }}
-              className="w-full"
-            >
-              <CarouselContent className="-ml-2 md:-ml-4">
-                {stampCards.map((card) => {
-                  const isInactive = card.is_completed || card.has_redeemed_reward;
-                  const isCompleted = card.is_completed && !card.has_redeemed_reward;
-                  
-                  return (
-                    <CarouselItem key={card.id} className="pl-2 md:pl-4 basis-full sm:basis-[85%] md:basis-[45%] lg:basis-[35%]">
-                      <Card className={`overflow-hidden h-full transition-all duration-300 ${isCompleted ? 'ring-2 ring-primary shadow-lg' : 'hover:shadow-lg'}`}>
-                        {/* Business Header */}
-                        <div className="p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
-                          <div className="flex items-center gap-3">
-                            {card.business.logo_url ? (
-                              <img
-                                src={card.business.logo_url}
-                                alt={card.business.business_name}
-                                className="w-12 h-12 rounded-full object-cover border-2 border-primary/30"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
-                                <Coffee className="w-6 h-6 text-white" />
+          <>
+            {/* Active Cards */}
+            {activeCards.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Coffee className="w-5 h-5 text-primary" />
+                  My Loyalty Cards
+                </h2>
+                
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: activeCards.length > 1,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent className="-ml-2 md:-ml-4">
+                    {activeCards.map((card) => (
+                      <CarouselItem key={card.id} className="pl-2 md:pl-4 basis-full sm:basis-[85%] md:basis-[45%] lg:basis-[35%]">
+                        <Card className="overflow-hidden h-full transition-all duration-300 hover:shadow-lg">
+                          {/* Business Header */}
+                          <div className="p-4 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+                            <div className="flex items-center gap-3">
+                              {card.business.logo_url ? (
+                                <img
+                                  src={card.business.logo_url}
+                                  alt={card.business.business_name}
+                                  className="w-12 h-12 rounded-full object-cover border-2 border-primary/30"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+                                  <Coffee className="w-6 h-6 text-white" />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-bold truncate">{card.business.business_name}</h3>
+                                <p className="text-xs text-muted-foreground truncate">{card.business.address}</p>
                               </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-bold truncate">{card.business.business_name}</h3>
-                              <p className="text-xs text-muted-foreground truncate">{card.business.address}</p>
                             </div>
                           </div>
-                        </div>
 
-                        {/* Card Content */}
-                        <div className={`p-4 ${isInactive ? 'opacity-70' : ''}`}>
-                          <div className="flex items-center justify-between mb-3">
-                            <p className="text-sm font-semibold">
-                              {card.stamps_collected} / {card.loyalty_program.stamps_required} stamps
-                            </p>
-                            {card.has_redeemed_reward && (
-                              <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
-                                ✓ Redeemed
-                              </span>
-                            )}
-                            {isCompleted && (
-                              <span className="text-xs bg-primary text-primary-foreground px-2 py-1 rounded-full animate-pulse">
-                                🎉 Ready!
-                              </span>
-                            )}
+                          {/* Card Content */}
+                          <div className="p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-sm font-semibold">
+                                {card.stamps_collected} / {card.loyalty_program.stamps_required} stamps
+                              </p>
+                            </div>
+
+                            <Progress
+                              value={(card.stamps_collected / card.loyalty_program.stamps_required) * 100}
+                              className="h-2 mb-4"
+                            />
+
+                            {/* Stamp visualization */}
+                            <div className="flex gap-1.5 mb-4 flex-wrap justify-center">
+                              {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => {
+                                const isCollected = i < card.stamps_collected;
+                                return (
+                                  <div
+                                    key={i}
+                                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm transition-all ${
+                                      isCollected
+                                        ? "bg-primary border-primary/50 text-white"
+                                        : "border-muted-foreground/20 text-muted-foreground/30"
+                                    }`}
+                                  >
+                                    {isCollected ? "☕" : ""}
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            <div className="flex items-center gap-2 text-sm p-2 rounded-lg bg-primary/10 text-primary">
+                              <Gift className="w-4 h-4 flex-shrink-0" />
+                              <span className="font-medium truncate">{card.loyalty_program.reward_description}</span>
+                            </div>
                           </div>
-
-                          <Progress
-                            value={(card.stamps_collected / card.loyalty_program.stamps_required) * 100}
-                            className="h-2 mb-4"
-                          />
-
-                          {/* Stamp visualization */}
-                          <div className="flex gap-1.5 mb-4 flex-wrap justify-center">
-                            {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => {
-                              const isCollected = i < card.stamps_collected;
-                              return (
-                                <div
-                                  key={i}
-                                  className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm transition-all ${
-                                    isCollected
-                                      ? isInactive 
-                                        ? "bg-muted border-muted-foreground/30 text-muted-foreground"
-                                        : "bg-primary border-primary/50 text-white"
-                                      : "border-muted-foreground/20 text-muted-foreground/30"
-                                  }`}
-                                >
-                                  {isCollected ? "☕" : ""}
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          <div className={`flex items-center gap-2 text-sm p-2 rounded-lg ${
-                            isInactive 
-                              ? 'bg-muted/50 text-muted-foreground' 
-                              : 'bg-primary/10 text-primary'
-                          }`}>
-                            <Gift className="w-4 h-4 flex-shrink-0" />
-                            <span className="font-medium truncate">{card.loyalty_program.reward_description}</span>
-                          </div>
-                        </div>
-                      </Card>
-                    </CarouselItem>
-                  );
-                })}
-              </CarouselContent>
-              {stampCards.length > 1 && (
-                <>
-                  <CarouselPrevious className="hidden sm:flex -left-4" />
-                  <CarouselNext className="hidden sm:flex -right-4" />
-                </>
-              )}
-            </Carousel>
-            
-            {stampCards.length > 1 && (
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                Swipe to see more cards
-              </p>
+                        </Card>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  {activeCards.length > 1 && (
+                    <>
+                      <CarouselPrevious className="hidden sm:flex -left-4" />
+                      <CarouselNext className="hidden sm:flex -right-4" />
+                    </>
+                  )}
+                </Carousel>
+                
+                {activeCards.length > 1 && (
+                  <p className="text-xs text-muted-foreground text-center mt-3">
+                    Swipe to see more cards
+                  </p>
+                )}
+              </div>
             )}
-          </div>
+
+            {/* Completed Cards Section */}
+            {completedCards.length > 0 && (
+              <div>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Gift className="w-5 h-5 text-success" />
+                  Completed Cards
+                  <span className="text-sm font-normal text-muted-foreground">
+                    ({completedCards.length})
+                  </span>
+                </h2>
+                
+                <Carousel
+                  opts={{
+                    align: "start",
+                    loop: completedCards.length > 1,
+                  }}
+                  className="w-full"
+                >
+                  <CarouselContent className="-ml-2 md:-ml-4">
+                    {completedCards.map((card) => {
+                      const isReadyToRedeem = !card.has_redeemed_reward;
+                      
+                      return (
+                        <CarouselItem key={card.id} className="pl-2 md:pl-4 basis-full sm:basis-[85%] md:basis-[45%] lg:basis-[35%]">
+                          <Card className={`overflow-hidden h-full transition-all duration-300 ${isReadyToRedeem ? 'ring-2 ring-success shadow-lg' : 'opacity-70'}`}>
+                            {/* Business Header */}
+                            <div className="p-4 bg-gradient-to-r from-success/10 via-success/5 to-transparent">
+                              <div className="flex items-center gap-3">
+                                {card.business.logo_url ? (
+                                  <img
+                                    src={card.business.logo_url}
+                                    alt={card.business.business_name}
+                                    className="w-12 h-12 rounded-full object-cover border-2 border-success/30"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-success to-success/70 flex items-center justify-center">
+                                    <Coffee className="w-6 h-6 text-white" />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-bold truncate">{card.business.business_name}</h3>
+                                  <p className="text-xs text-muted-foreground truncate">{card.business.address}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Card Content */}
+                            <div className="p-4">
+                              <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm font-semibold">
+                                  {card.stamps_collected} / {card.loyalty_program.stamps_required} stamps
+                                </p>
+                                {card.has_redeemed_reward ? (
+                                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">
+                                    ✓ Redeemed
+                                  </span>
+                                ) : (
+                                  <span className="text-xs bg-success text-white px-2 py-1 rounded-full animate-pulse">
+                                    🎉 Ready!
+                                  </span>
+                                )}
+                              </div>
+
+                              <Progress
+                                value={100}
+                                className="h-2 mb-4"
+                              />
+
+                              {/* Stamp visualization */}
+                              <div className="flex gap-1.5 mb-4 flex-wrap justify-center">
+                                {Array.from({ length: card.loyalty_program.stamps_required }).map((_, i) => (
+                                  <div
+                                    key={i}
+                                    className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm transition-all ${
+                                      card.has_redeemed_reward
+                                        ? "bg-muted border-muted-foreground/30 text-muted-foreground"
+                                        : "bg-success border-success/50 text-white"
+                                    }`}
+                                  >
+                                    ☕
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className={`flex items-center gap-2 text-sm p-2 rounded-lg ${
+                                card.has_redeemed_reward 
+                                  ? 'bg-muted/50 text-muted-foreground' 
+                                  : 'bg-success/10 text-success'
+                              }`}>
+                                <Gift className="w-4 h-4 flex-shrink-0" />
+                                <span className="font-medium truncate">{card.loyalty_program.reward_description}</span>
+                              </div>
+
+                              {isReadyToRedeem && (
+                                <Button 
+                                  onClick={() => navigate("/customer/redeem")}
+                                  className="w-full mt-3 bg-success hover:bg-success/90"
+                                  size="sm"
+                                >
+                                  Redeem Reward
+                                </Button>
+                              )}
+                            </div>
+                          </Card>
+                        </CarouselItem>
+                      );
+                    })}
+                  </CarouselContent>
+                  {completedCards.length > 1 && (
+                    <>
+                      <CarouselPrevious className="hidden sm:flex -left-4" />
+                      <CarouselNext className="hidden sm:flex -right-4" />
+                    </>
+                  )}
+                </Carousel>
+              </div>
+            )}
+          </>
         )}
 
         {/* Explore Shops Section */}

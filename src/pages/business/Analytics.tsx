@@ -103,11 +103,12 @@ export default function Analytics() {
       const totalStamps = [...(activeCards || []), ...(completedCards || [])]
         .reduce((sum, card) => sum + card.stamps_collected, 0);
 
-      // Get redemptions
+      // Get redemptions (only actually redeemed ones)
       const { data: redemptions } = await supabase
         .from('rewards_redeemed')
         .select('*')
-        .eq('business_id', business.id);
+        .eq('business_id', business.id)
+        .eq('is_redeemed', true);
 
       // Get daily stats for last 7 days
       const last7Days = Array.from({ length: 7 }, (_, i) => {
